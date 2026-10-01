@@ -84,10 +84,12 @@ source .venv-isaaclab/bin/activate
 # 1. IsaacLab packages (editable) + Isaac Sim 6.0 + torch cu128 + Newton, from the committed lock (several GB)
 uv sync --active --project third-party/IsaacLab --extra isaacsim
 
-# 2. ProtoMotions with its IsaacLab extra, editable, from this repo
+# 2. ProtoMotions with its IsaacLab extra, editable, from this repo (the env vars let uv see
+#    NVIDIA's index, which this pyproject does not declare). typer is for the data-prep
+#    scripts under third-party/protomotions/data/scripts, which are not part of the package.
 UV_EXTRA_INDEX_URL=https://pypi.nvidia.com UV_INDEX_STRATEGY=unsafe-best-match UV_PRERELEASE=allow \
   uv pip install -e "third-party/protomotions[isaaclab]"
-uv pip install -r third-party/protomotions/requirements_isaaclab.txt
+uv pip install typer
 
 # 3. Isaac Sim asks you to accept the NVIDIA EULA on first launch; this answers it for headless runs
 export OMNI_KIT_ACCEPT_EULA=yes
