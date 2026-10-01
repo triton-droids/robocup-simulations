@@ -36,27 +36,10 @@ ever needs one, download it from the upstream repo and keep it outside the subtr
 
 ## Install
 
-Packages are managed with [uv](https://docs.astral.sh/uv/). The root `pyproject.toml`
-depends on the vendored package as an editable path source, so `uv sync` installs
-`third-party/protomotions` in place and `uv.lock` pins everything. One simulator per
-environment; pick it with an extra:
-
-```sh
-uv sync --extra mujoco            # CPU-only, single env; good for local debugging
-uv sync --extra newton            # GPU, Newton 1.0 stack
-uv run protomotions info --json   # smoke test: prints the resolved asset root
-uv run protomotions-train-agent --help
-```
-
-Add `--extra dev` for pytest and the ONNX export tooling. Python 3.11 is pinned in
-`.python-version` (upstream's recommendation for uv installs); uv downloads it if needed.
-
-Not covered by `uv sync`, follow upstream's `docs/source/getting_started/installation.rst`:
-IsaacLab (Python 3.12, Linux x86_64, pinned source checkout installed first), IsaacGym
-(Python 3.8, manual download), and Genesis (Python 3.10, untested upstream).
-
-Known limit: the `mujoco` and `newton` extras pin `tensordict==0.9.0`, which only ships
-macOS 15+ wheels. On older macOS, work on a Linux machine.
+See the **Environments** section of the top-level [README](../README.md). MuJoCo and
+Newton are `uv sync` extras of the root `pyproject.toml`, which depends on
+`third-party/protomotions` as an editable path source. IsaacLab lives in a pinned
+IsaacLab checkout with ProtoMotions installed into it.
 
 ## Adding our robot
 
