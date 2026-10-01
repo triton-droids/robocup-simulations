@@ -1,0 +1,79 @@
+# Weekly sync of the vendored ProtoMotions subtree (third-party/protomotions).
+# Pulls new upstream commits as a squashed subtree merge and opens/updates a PR.
+# Manual sync and conflict handling: see docs/protomotions.md.
+name: sync-protomotions
+
+on:
+  schedule:
+    - cron: "0 9 * * 1" # Mondays 09:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  PREFIX: third-party/protomotions
+  UPSTREAM_URL: https://github.com/NVlabs/ProtoMotions.git
+  UPSTREAM_REF: main
+  SYNC_BRANCH: chore/sync-protomotions
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Pull upstream and open PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git remote add protomotions-upstream "$UPSTREAM_URL"
+          git fetch protomotions-upstream "$UPSTREAM_REF"
+
+          old=$(git log -1 --grep="^git-subtree-dir: $PREFIX/*\$" \
+                  --format='%(trailers:key=git-subtree-split,valueonly)' | tr -d '[:space:]')
+          new=$(git rev-parse "protomotions-upstream/$UPSTREAM_REF")
+          echo "old=$old"
+          echo "new=$new"
+
+          if [ -z "$old" ]; then
+            echo "::error::no git-subtree-split trailer found for $PREFIX; was the subtree added with --squash?"
+            exit 1
+          fi
+          if [ "$old" = "$new" ]; then
+            echo "Up to date with upstream."
+            exit 0
+          fi
+          if ! git cat-file -e "$old^{commit}" 2>/dev/null; then
+            echo "::error::previous upstream commit $old is not reachable; upstream rewrote history. Re-add the subtree manually."
+            exit 1
+          fi
+
+          git switch -c "$SYNC_BRANCH"
+          git subtree pull --prefix="$PREFIX" protomotions-upstream "$UPSTREAM_REF" --squash \
+            -m "chore(protomotions): sync to NVlabs/ProtoMotions@${new:0:7}"
+
+          git push --force-with-lease origin "HEAD:$SYNC_BRANCH"
+
+          title="chore(protomotions): sync to NVlabs/ProtoMotions@${new:0:7}"
+          body=$(cat <<MD
+          Weekly ProtoMotions subtree sync.
+
+          Upstream changes: https://github.com/NVlabs/ProtoMotions/compare/${old}...${new}
+
+          Merge with a **merge commit only** (no squash, no rebase). See docs/protomotions.md.
+          MD
+          )
+          existing=$(gh pr list --head "$SYNC_BRANCH" --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh pr edit "$existing" --title "$title" --body "$body"
+          else
+            gh pr create --base main --head "$SYNC_BRANCH" --title "$title" --body "$body"
+          fi
