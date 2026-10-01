@@ -17,6 +17,7 @@ env:
   UPSTREAM_URL: https://github.com/NVlabs/ProtoMotions.git
   UPSTREAM_REF: main
   SYNC_BRANCH: chore/sync-protomotions
+  REVIEWER: ogershony
 
 jobs:
   sync:
@@ -75,5 +76,6 @@ jobs:
           if [ -n "$existing" ]; then
             gh pr edit "$existing" --title "$title" --body "$body"
           else
-            gh pr create --base main --head "$SYNC_BRANCH" --title "$title" --body "$body"
+            gh pr create --base main --head "$SYNC_BRANCH" --title "$title" --body "$body" \
+              --reviewer "$REVIEWER"
           fi
