@@ -5,12 +5,7 @@ description = "RoboCup humanoid simulation and policy training on ProtoMotions"
 readme = "README.md"
 # 3.11 is what upstream recommends for uv-managed MuJoCo/Newton installs.
 requires-python = ">=3.11,<3.13"
-dependencies = [
-    "protomotions",
-    # Used by ProtoMotions' data-prep scripts (data/scripts, usd_convert), which sit
-    # outside the installed package and so are not covered by its extras.
-    "typer>=0.6.1",
-]
+dependencies = ["protomotions"]
 
 # One simulator per environment. Pick one: uv sync --extra mujoco
 # IsaacLab is its own uv project at third-party/IsaacLab (see README). Genesis is not supported here.
