@@ -38,8 +38,8 @@ ever needs one, download it from the upstream repo and keep it outside the subtr
 
 See the **Environments** section of the top-level [README](../README.md). MuJoCo and
 Newton are `uv sync` extras of the root `pyproject.toml`, which depends on
-`third-party/protomotions` as an editable path source. IsaacLab is installed by its
-own installer from the vendored checkout (below) with ProtoMotions on top.
+`third-party/protomotions` as an editable path source. IsaacLab syncs from its own
+vendored uv project (below) with ProtoMotions installed on top.
 
 ## IsaacLab subtree
 
@@ -50,13 +50,25 @@ ProtoMotions is tested against. ProtoMotions records that pin in two places:
 and the header of `third-party/protomotions/requirements_isaaclab.txt`. Its
 `.gitattributes` was removed like ProtoMotions' (the only LFS files are test fixtures).
 
-There is no weekly sync for IsaacLab. Bump it only when a ProtoMotions sync changes
-that pin (owners only):
+**Local changes to the vendored tree**, all in `third-party/IsaacLab/pyproject.toml` and
+marked with `robocup-simulations:` comments:
+
+- Four platform markers rewritten from substring form (`platform_machine in 'x86_64 AMD64'`)
+  to equality form. uv cannot prove substring markers disjoint, so upstream's form makes
+  `uv lock` fail with a phantom x86/ARM conflict on `pytetwild`.
+- The `ov` extra emptied. It pinned an `ovphysx` build that exists on no public index,
+  and `uv lock` resolves every extra. We do not use the Omniverse PhysX backend.
+- `uv.lock` committed, generated from the patched project. This is what pins everyone's
+  `.venv-isaaclab`.
+
+There is no weekly sync for IsaacLab, and no bump is planned. If one is ever needed
+(owners only), expect the pyproject edits above to conflict and reapply them:
 
 ```sh
 git fetch https://github.com/isaac-sim/IsaacLab.git <new-sha>
 git subtree pull --prefix=third-party/IsaacLab https://github.com/isaac-sim/IsaacLab.git <new-sha> --squash
 git rm third-party/IsaacLab/.gitattributes      # if the pull brought it back
+uv lock --project third-party/IsaacLab           # after re-applying the marker/ov patch
 ```
 
 Then everyone recreates `.venv-isaaclab` per the README.

@@ -69,20 +69,20 @@ Maintenance is identical to MuJoCo with `--extra newton`.
 ### IsaacLab
 
 IsaacLab is not installable from PyPI, so `third-party/IsaacLab` holds the exact commit
-ProtoMotions is pinned to. Its own installer (`isaaclab.sh -i`) populates the active
-environment with Isaac Sim 6.0, CUDA torch, and the IsaacLab packages in editable mode,
-using `uv pip` under the hood. ProtoMotions goes in afterwards. (IsaacLab's `uv sync`
-path is broken at this commit; its lockfile cannot resolve, so use the installer.)
+ProtoMotions is pinned to, as its own uv project with a committed `uv.lock`. You sync
+that project into the named env, then add ProtoMotions on top. Order matters: `uv sync`
+makes the env match IsaacLab's lock exactly and removes anything else, so ProtoMotions
+goes in last.
 
-Requires Linux x86_64, an NVIDIA driver, and `cmake` (the installer runs
-`sudo apt-get install cmake build-essential` if it is missing).
+Requires Linux x86_64 with glibc 2.35+ (Ubuntu 22.04 or newer; NVIDIA's wheels are
+tagged `manylinux_2_35`) and an NVIDIA driver.
 
 ```sh
 uv venv .venv-isaaclab --python 3.12 --seed
 source .venv-isaaclab/bin/activate
 
-# 1. Isaac Sim 6.0 + torch (cu128) + IsaacLab packages, editable from third-party/IsaacLab (several GB)
-third-party/IsaacLab/isaaclab.sh -i isaacsim
+# 1. IsaacLab packages (editable) + Isaac Sim 6.0 + torch cu128 + Newton, from the committed lock (several GB)
+uv sync --active --project third-party/IsaacLab --extra isaacsim
 
 # 2. ProtoMotions with its IsaacLab extra, editable, from this repo
 UV_EXTRA_INDEX_URL=https://pypi.nvidia.com UV_INDEX_STRATEGY=unsafe-best-match UV_PRERELEASE=allow \
@@ -102,11 +102,18 @@ protomotions-train-agent --simulator isaaclab --headless ...
 
 - **After a ProtoMotions sync merge:** re-run step 2 with the env active. The editable
   install picks up code changes by itself; this only matters when upstream dependencies move.
+- **Re-sync IsaacLab's own packages** (rare): add `--inexact` so ProtoMotions survives:
+  `uv sync --active --inexact --project third-party/IsaacLab --extra isaacsim`.
 - **Do not move or delete `third-party/IsaacLab`** while the env exists: it is installed
   editable and resolves its `apps/` directory relative to the source tree at import time.
-- **When ProtoMotions bumps its IsaacLab pin**, an owner updates the subtree (see
-  `docs/protomotions.md`); then `rm -rf .venv-isaaclab` and repeat the steps above.
 - **Start over:** `rm -rf .venv-isaaclab` and repeat the steps above.
+
+**Fallback.** If step 1 produces an environment where Isaac Sim misbehaves at runtime
+(for example torch being shadowed by Isaac Sim's bundled copy), IsaacLab's own installer
+does extra post-install repairs that `uv sync` does not. From a fresh env, replace step 1
+with `third-party/IsaacLab/isaaclab.sh -i isaacsim`; it uses `uv pip` under the hood and
+runs `sudo apt-get install cmake build-essential` if cmake is missing. Steps 2 and 3 are
+unchanged. Please report which route you ended up on.
 
 ### Which one am I in?
 
