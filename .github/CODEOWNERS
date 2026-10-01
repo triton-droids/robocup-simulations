@@ -1,4 +1,4 @@
-# Only these owners may change the vendored ProtoMotions subtree or the repo
+# Only these owners may change the vendored third-party subtrees or the repo
 # governance files directly. Everyone else: open a PR and request a review.
-/third-party/protomotions/   @ogershony @triton-droids/admin
+/third-party/                @ogershony @triton-droids/admin
 /.github/                    @ogershony @triton-droids/admin

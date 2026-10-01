@@ -38,8 +38,28 @@ ever needs one, download it from the upstream repo and keep it outside the subtr
 
 See the **Environments** section of the top-level [README](../README.md). MuJoCo and
 Newton are `uv sync` extras of the root `pyproject.toml`, which depends on
-`third-party/protomotions` as an editable path source. IsaacLab lives in a pinned
-IsaacLab checkout with ProtoMotions installed into it.
+`third-party/protomotions` as an editable path source. IsaacLab is installed by its
+own installer from the vendored checkout (below) with ProtoMotions on top.
+
+## IsaacLab subtree
+
+`third-party/IsaacLab` is a squashed subtree of
+[isaac-sim/IsaacLab](https://github.com/isaac-sim/IsaacLab) pinned to the commit
+ProtoMotions is tested against. ProtoMotions records that pin in two places:
+`_ISAACLAB_PIN` in `third-party/protomotions/protomotions/utils/simulator_imports.py`
+and the header of `third-party/protomotions/requirements_isaaclab.txt`. Its
+`.gitattributes` was removed like ProtoMotions' (the only LFS files are test fixtures).
+
+There is no weekly sync for IsaacLab. Bump it only when a ProtoMotions sync changes
+that pin (owners only):
+
+```sh
+git fetch https://github.com/isaac-sim/IsaacLab.git <new-sha>
+git subtree pull --prefix=third-party/IsaacLab https://github.com/isaac-sim/IsaacLab.git <new-sha> --squash
+git rm third-party/IsaacLab/.gitattributes      # if the pull brought it back
+```
+
+Then everyone recreates `.venv-isaaclab` per the README.
 
 ## Adding our robot
 

@@ -8,7 +8,7 @@ requires-python = ">=3.11,<3.13"
 dependencies = ["protomotions"]
 
 # One simulator per environment. Pick one: uv sync --extra mujoco
-# IsaacLab, IsaacGym, and Genesis are not uv extras here (see docs/protomotions.md).
+# IsaacLab is its own uv project at third-party/IsaacLab (see README). Genesis is not supported here.
 [project.optional-dependencies]
 mujoco = ["protomotions[mujoco]"]
 newton = ["protomotions[newton]"]
