@@ -1,0 +1,70 @@
+# Copyright (c) 2022-2026, The Isaac Lab Project Developers (https://github.com/isaac-sim/IsaacLab/blob/main/CONTRIBUTORS.md).
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
+"""Configuration for Newton Warp Renderer."""
+
+from typing import Literal
+
+from isaaclab.renderers.renderer_cfg import RendererCfg
+from isaaclab.utils.configclass import configclass
+
+
+@configclass
+class NewtonWarpRendererCfg(RendererCfg):
+    """Configuration for Newton Warp Renderer."""
+
+    renderer_type: str = "newton_warp"
+    """Type identifier for Newton Warp renderer."""
+
+    enable_textures: bool = True
+    """Enable texture-mapped rendering for meshes."""
+
+    enable_shadows: bool = False
+    """Enable shadow rays for directional lights."""
+
+    enable_ambient_lighting: bool = True
+    """Enable ambient lighting for the scene."""
+
+    enable_backface_culling: bool = True
+    """Cull back-facing triangles."""
+
+    max_distance: float = 1000.0
+    """Maximum ray distance [m].
+
+    Used as the far clip when a camera does not provide a spawn configuration. When the camera's
+    :attr:`~isaaclab.sim.spawners.sensors.PinholeCameraCfg.clipping_range` is available, its far
+    value takes precedence per camera (see
+    :meth:`~isaaclab_newton.renderers.NewtonWarpRenderer.create_render_data`).
+    """
+
+    depth_clipping_behavior: Literal["max", "zero", "none"] = "none"
+    """Clipping behavior for depth values beyond the far plane. Defaults to ``"none"``.
+
+    Newton writes ``0.0`` for rays that miss all geometry or fall beyond the far plane, so the
+    background sentinel is ``0.0`` rather than ``+inf`` (unlike the RTX renderer). Consequently:
+
+    - ``"none"``: leave background depth at ``0.0``.
+    - ``"zero"``: leave background depth at ``0.0`` (identical to ``"none"`` for this backend).
+    - ``"max"``: replace background depth with the far clip [m], mirroring
+      :attr:`~isaaclab_physx.renderers.IsaacRtxRendererCfg.depth_clipping_behavior`.
+    """
+
+    create_default_light: bool = True
+    """Create a default directional light source in the scene."""
+
+    colorize_instance_segmentation: bool = True
+    """Expose ``instance_segmentation_fast`` as ``(N, H, W, 4) uint8`` if True, else ``(N, H, W, 1) int32``."""
+
+    render_order: Literal["pixel_priority", "view_priority", "tiled"] = "tiled"
+    """Render traversal order for the Newton tiled camera."""
+
+    tile_rendering_width: int = 8
+    """Tile width [px] for tiled rendering."""
+
+    tile_rendering_height: int = 8
+    """Tile height [px] for tiled rendering."""
+
+    kernel_block_dim: int = 64
+    """Thread block dimension forwarded to Newton."""
