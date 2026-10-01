@@ -1,0 +1,9 @@
+# Anchored on purpose: unanchored patterns would reach into third-party/protomotions.
+/results/
+/outputs/
+/wandb/
+/.venv/
+/venv/
+__pycache__/
+*.pyc
+.DS_Store
