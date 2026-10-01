@@ -1,0 +1,26 @@
+[project]
+name = "robocup-simulations"
+version = "0.1.0"
+description = "RoboCup humanoid simulation and policy training on ProtoMotions"
+readme = "README.md"
+# 3.11 is what upstream recommends for uv-managed MuJoCo/Newton installs.
+requires-python = ">=3.11,<3.13"
+dependencies = ["protomotions"]
+
+# One simulator per environment. Pick one: uv sync --extra mujoco
+# IsaacLab, IsaacGym, and Genesis are not uv extras here (see docs/protomotions.md).
+[project.optional-dependencies]
+mujoco = ["protomotions[mujoco]"]
+newton = ["protomotions[newton]"]
+dev = ["protomotions[dev]"]
+
+[tool.uv]
+package = false
+
+# Mirrors upstream's [tool.uv] conflicts; the simulator extras pin incompatible torch/wandb versions.
+conflicts = [
+  [{ extra = "mujoco" }, { extra = "newton" }],
+]
+
+[tool.uv.sources]
+protomotions = { path = "third-party/protomotions", editable = true }
