@@ -8,7 +8,9 @@ def robot_config(robot_name: str, **updates) -> RobotConfig:
     """Factory function to create robot configuration based on robot type.
 
     Args:
-        robot_name: Name of the robot type (smpl, smplx, amp, g1, h1_2, soma23)
+        robot_name: Name of the robot type (smpl, smplx, amp, g1, h1_2, soma23), or a
+            name registered by another package in the ``protomotions.robots``
+            entry-point group
         **updates: Optional field updates to apply to the robot config
 
     Returns:
@@ -42,10 +44,26 @@ def robot_config(robot_name: str, **updates) -> RobotConfig:
 
         config = Soma23RobotConfig()
     else:
-        raise ValueError(f"Invalid robot name: {robot_name}")
+        config = _robot_config_from_entry_point(robot_name)
 
     # Apply any updates
     if updates:
         config.update_fields(**updates)
 
     return config
+
+
+def _robot_config_from_entry_point(robot_name: str) -> RobotConfig:
+    """Robots registered by other packages through the ``protomotions.robots``
+    entry-point group. An entry point is a zero-argument callable (usually a
+    RobotConfig subclass) that returns a RobotConfig."""
+    from importlib.metadata import entry_points
+
+    registered = {ep.name: ep for ep in entry_points(group="protomotions.robots")}
+    if robot_name not in registered:
+        raise ValueError(
+            f"Invalid robot name: {robot_name}. Built-in: smpl, smplx, amp, g1, h1_2, soma23. "
+            f"Registered via entry points: {sorted(registered) or 'none'} "
+            "(re-run the package install if a robot you added is missing)."
+        )
+    return registered[robot_name].load()()
