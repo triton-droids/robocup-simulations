@@ -16,14 +16,40 @@ Before touching anything under `third-party/`, read [docs/protomotions.md](docs/
 | `tests/`                  | `pytest` smoke tests (needs the `dev` extra).                                                     |
 | `third-party/`            | Vendored ProtoMotions and IsaacLab subtrees. Owner approval needed for edits.                      |
 
-With an environment active (below):
+## Usage
+
+With an environment active (see below).
+
+### Tests
 
 ```sh
-pytest                                   # config loads, gains match the xml, MuJoCo steps
-cd robocup_rl/experiments/steering       # run from the experiment dir: outputs go to its results/<run>/
-protomotions-train-agent --robot-name triton_humanoid --simulator mujoco --num-envs 1 --batch-size 32 \
-  --motion-file none --experiment-path config.py --experiment-name first_run --headless
+pytest                                                   # whole suite; Newton cases skip without a GPU
+pytest tests/test_triton_humanoid.py::test_kinematics    # one test
+pytest -k newton -v                                      # by keyword, here the Newton cases (GPU)
+pytest tests/test_triton_humanoid_isaaclab.py            # IsaacLab (GPU); runs alone, in its own process
 ```
+
+Tests need the `dev` extra. The IsaacLab file stays separate because Isaac Sim must start
+before torch is imported.
+
+### Training
+
+Every experiment is one directory, `robocup_rl/experiments/<experiment>/`, holding a
+`config.py`. The command is the same for all of them; only `<experiment>` and `<run>` change:
+
+```sh
+cd robocup_rl/experiments/<experiment>              # outputs go to this directory's results/<run>/
+protomotions-train-agent --robot-name triton_humanoid --simulator newton \
+  --num-envs 1024 --batch-size 4096 --motion-file none \
+  --experiment-path config.py --experiment-name <run> --headless \
+  --training-max-iterations 1000 --use-wandb --wandb-project robocup-triton-humanoid
+```
+
+- Train on Newton or IsaacLab (GPU). The MuJoCo env is for inspecting and evaluating only.
+- Re-running with the same `--experiment-name` resumes from `results/<run>/last.ckpt`.
+- `--batch-size` must divide `--num-envs` × 32. `--motion-file none` is required by the CLI for
+  motion-free experiments. Drop `--use-wandb ...` for TensorBoard only; W&B reads its key from
+  `~/.netrc` (`wandb login` writes it, `wandb login --verify` checks it).
 
 ## Environments
 
@@ -89,52 +115,37 @@ Maintenance is identical to MuJoCo with `--extra newton`.
 
 ### IsaacLab
 
-IsaacLab is not installable from PyPI, so `third-party/IsaacLab` holds the exact commit
-ProtoMotions is pinned to, as its own uv project with a committed `uv.lock`. You sync
-that project into the named env, then add ProtoMotions on top. Order matters: `uv sync`
-makes the env match IsaacLab's lock exactly and removes anything else, so ProtoMotions
-goes in last.
-
-Requires Linux x86_64 with glibc 2.35+ (Ubuntu 22.04 or newer; NVIDIA's wheels are
-tagged `manylinux_2_35`) and an NVIDIA driver.
+IsaacLab is not on PyPI, so `third-party/IsaacLab` is vendored at the commit ProtoMotions is
+pinned to, with its own `uv.lock`. Sync it first, then add ProtoMotions on top (`uv sync`
+removes anything not in that lock, so ProtoMotions goes last). Needs Linux x86_64, glibc 2.35+,
+and an NVIDIA driver.
 
 ```sh
 uv venv .venv-isaaclab --python 3.12 --seed
 source .venv-isaaclab/bin/activate
 
-# 1. IsaacLab packages (editable) + Isaac Sim 6.0 + torch cu128 + Newton, from the committed lock (several GB)
+# 1. IsaacLab (editable) + Isaac Sim 6.0 + torch cu128, from the committed lock (several GB)
 uv sync --active --project third-party/IsaacLab --extra isaacsim
 
-# 2. ProtoMotions with its IsaacLab extra, editable, from this repo
+# 2. ProtoMotions (editable) and robocup_rl. The pillow override settles an Isaac Sim / moviepy pin conflict.
 UV_EXTRA_INDEX_URL=https://pypi.nvidia.com UV_INDEX_STRATEGY=unsafe-best-match UV_PRERELEASE=allow \
-  uv pip install -e "third-party/protomotions[isaaclab]"
-uv pip install -r third-party/protomotions/requirements_isaaclab.txt
+  uv pip install --override <(echo pillow==12.1.1) -e "third-party/protomotions[isaaclab,dev]"
+uv pip install --no-deps -e .
 
-# 3. Isaac Sim asks you to accept the NVIDIA EULA on first launch; this answers it for headless runs
+# 3. Accept the Isaac Sim EULA for headless runs
 export OMNI_KIT_ACCEPT_EULA=yes
 protomotions info --json
 ```
 
-Then, with the env active, from the repo root:
+Do not add upstream's `requirements_isaaclab.txt` on top; its floors override the pins.
 
-```sh
-protomotions-train-agent --simulator isaaclab --headless ...
-```
-
-- **After a ProtoMotions sync merge:** re-run step 2 with the env active. The editable
-  install picks up code changes by itself; this only matters when upstream dependencies move.
-- **Re-sync IsaacLab's own packages** (rare): add `--inexact` so ProtoMotions survives:
-  `uv sync --active --inexact --project third-party/IsaacLab --extra isaacsim`.
-- **Do not move or delete `third-party/IsaacLab`** while the env exists: it is installed
-  editable and resolves its `apps/` directory relative to the source tree at import time.
-- **Start over:** `rm -rf .venv-isaaclab` and repeat the steps above.
-
-**Fallback.** If step 1 produces an environment where Isaac Sim misbehaves at runtime
-(for example torch being shadowed by Isaac Sim's bundled copy), IsaacLab's own installer
-does extra post-install repairs that `uv sync` does not. From a fresh env, replace step 1
-with `third-party/IsaacLab/isaaclab.sh -i isaacsim`; it uses `uv pip` under the hood and
-runs `sudo apt-get install cmake build-essential` if cmake is missing. Steps 2 and 3 are
-unchanged. Please report which route you ended up on.
+- **After a ProtoMotions sync merge:** re-run step 2.
+- **Re-sync IsaacLab's own packages** (rare): `uv sync --active --inexact --project third-party/IsaacLab --extra isaacsim`.
+- **Do not move or delete `third-party/IsaacLab`** while the env exists; it is installed editable.
+- **Start over:** `rm -rf .venv-isaaclab` and repeat.
+- **Fallback:** if Isaac Sim misbehaves at runtime (for example torch shadowed by its bundled copy),
+  replace step 1 with `third-party/IsaacLab/isaaclab.sh -i isaacsim`, which does extra post-install
+  repairs (and may `sudo apt-get install cmake build-essential`). Steps 2 and 3 are unchanged.
 
 ### Which one am I in?
 

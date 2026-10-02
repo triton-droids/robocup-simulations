@@ -65,11 +65,13 @@ ProtoMotions writes everything (configs, checkpoints, TensorBoard) to
 it. Launch from inside the experiment directory so each experiment keeps its own runs:
 
 ```sh
-cd robocup_rl/experiments/steering
-protomotions-train-agent --robot-name triton_humanoid --simulator mujoco --num-envs 1 --batch-size 32 \
-  --motion-file none --experiment-path config.py --experiment-name first_run --headless
+cd robocup_rl/experiments/<experiment>
+protomotions-train-agent --robot-name triton_humanoid --simulator newton \
+  --num-envs 1024 --batch-size 4096 --motion-file none \
+  --experiment-path config.py --experiment-name <run> --headless
 ```
 
-The CLI still requires `--motion-file`; pass `none` for motion-free experiments and leave
-it out at inference. `batch_size` must divide `num_envs * num_steps` (32 by default), so
-single-env MuJoCo runs use `--batch-size 32`.
+Train on Newton or IsaacLab (GPU); the MuJoCo env is single-env and for inspection and
+evaluation only. The CLI still requires `--motion-file`; pass `none` for motion-free
+experiments and leave it out at inference. `batch_size` must divide `num_envs * num_steps`
+(32 by default).

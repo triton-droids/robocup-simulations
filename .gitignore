@@ -1,6 +1,6 @@
 # Anchored on purpose: unanchored patterns would reach into third-party/protomotions.
-# ProtoMotions writes results/ (and wandb/ if enabled) under the cwd; runs are launched from
-# inside their experiment directory, so that is where they land.
+# ProtoMotions writes results/, output/ (renderings) and wandb/ under the cwd; runs are launched
+# from inside their experiment directory, so that is where they land (see CLAUDE.md).
 /robocup_rl/experiments/*/results/
 /robocup_rl/experiments/*/wandb/
 /.venv*/
@@ -10,3 +10,4 @@
 __pycache__/
 *.pyc
 .DS_Store
+/robocup_rl/experiments/*/output/
