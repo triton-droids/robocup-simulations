@@ -17,10 +17,10 @@ git log -1 --grep='^git-subtree-dir: third-party/protomotions/*$' \
   the subtree so it doesn't collide with the weekly sync. If a change is a genuine
   ProtoMotions fix rather than RoboCup-specific, send it upstream to NVlabs and let the
   sync bring it in.
-- **Keep subtree edits small and local.** Our robot lives inside the subtree (see below),
-  but training scripts, experiments, and anything RoboCup-specific that does not have
-  to be in ProtoMotions should live outside it. Fewer touched upstream files means fewer
-  conflicts at sync time.
+- **Keep subtree edits small and local.** Our robot, its config, experiments, and tests
+  live outside the subtree (`robots/`, `robocup_rl/`, `tests/`). The only local change
+  inside it is the robot-registration hook in `robot_configs/factory.py` (see "Adding our
+  robot"). Fewer touched upstream files means fewer conflicts at sync time.
 - **Merge sync PRs with a merge commit only.** Never squash-merge or rebase-merge them,
   and never rebase `main` across a sync merge. Both destroy the `git-subtree-split`
   trailer that the next sync depends on. The `main` ruleset enforces merge-commit-only.
@@ -75,26 +75,33 @@ Then everyone recreates `.venv-isaaclab` per the README.
 
 ## Adding our robot
 
-The robot is added inside the subtree, following upstream's
-`docs/source/tutorials/workflows/custom_robot.rst`. The files involved, all under
-`third-party/protomotions/`:
+Upstream's `docs/source/tutorials/workflows/custom_robot.rst` puts a new robot inside the
+package and adds an `elif` to `protomotions/robot_configs/factory.py`. We keep everything
+outside the subtree instead and register the robot through a Python entry point:
 
-| File                                             | What goes there                                                                                                   |
-| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| `protomotions/data/assets/mjcf/<robot>.xml`      | The MJCF (root `<freejoint/>`, joint limits, collision geoms). URDF must be converted to MJCF first.               |
-| `protomotions/data/assets/mesh/<Robot>/*.stl`    | Meshes referenced by the MJCF's `meshdir`.                                                                        |
-| `protomotions/robot_configs/<robot>.py`          | `RobotConfig` subclass: body-name mapping, `trackable_bodies_subset`, `default_root_height`, control overrides.    |
-| `protomotions/robot_configs/factory.py`          | One `elif robot_name == "<robot>":` branch.                                                                       |
-| `protomotions/data/assets/urdf/for_retargeting/` | The URDF used by the PyRoki retargeter.                                                                           |
-| `pyroki/batch_retarget_to_<robot>_from_keypoints.py` | Copy of the G1 script with our keypoint-to-link map, scale factors, and URDF path.                            |
+| Where                                                          | What                                                                                                   |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `robots/<robot>/`                                              | MJCF and meshes. ProtoMotions needs one actuator per joint and a `<worldbody>` in the file it loads.    |
+| `robocup_rl/robots/<robot>.py`                                 | `RobotConfig` subclass: absolute `asset_root`, body-name mapping, PD gains, default pose, sim params.   |
+| `pyproject.toml` (root)                                        | `[project.entry-points."protomotions.robots"] <robot> = "robocup_rl.robots.<robot>:<Config>"`.         |
+| `third-party/protomotions/protomotions/robot_configs/factory.py` | **Local subtree change (owners only):** the `else` branch calls `_robot_config_from_entry_point`, which looks the name up in that entry-point group. Nothing RoboCup-specific is in the file. |
 
-Useful upstream helpers: `scripts/identify_robot_facing_axis.py --robots <robot> --view`
-for `semantic_forward_axis_xy`, and `examples/random_pose_visualizer.py --robot <robot>`
-to check the model loads (it has its own `ROBOT_SPECS` dict to extend).
+`uv sync` (or `uv pip install -e .`) writes the entry point; `--robot-name <robot>` then
+works in `protomotions-train-agent`, inference, and every upstream helper script, because
+they all go through `robot_config()`. Adding another robot is a config file plus one
+pyproject line; the subtree is not touched again.
 
-These are exactly the files most likely to conflict at sync time when upstream touches
-them (`factory.py` in particular). Resolve by keeping both sides: upstream's new branches
-plus ours.
+If a sync conflicts on `factory.py`, take upstream's version and re-apply the hook: the
+`else` branch becomes `config = _robot_config_from_entry_point(robot_name)` and the helper
+is appended at the end of the file (it is ~14 generic lines; `git log -p` on the file shows
+them). The hook is a candidate upstream PR; if NVlabs adopts it, the local diff disappears.
+
+Useful upstream helpers: `scripts/identify_robot_facing_axis.py --robots <robot>` for
+`semantic_forward_axis_xy`, and `examples/random_pose_visualizer.py` to check the model
+loads (its `--robot` choices and `ROBOT_SPECS` dict are hard-coded; copy it if needed).
+
+Not done yet for `triton_humanoid`: a URDF and a legs-only retargeting script for the
+PyRoki retargeter (`pyroki/batch_retarget_to_g1_from_keypoints.py` is G1-specific).
 
 ## Syncing with upstream
 

@@ -1,20 +1,21 @@
 # Triton humanoid
 
 MuJoCo description of the Triton Droids RoboCup humanoid: a 10-DOF, legs-only biped
-with a floating base. This directory is the single source of truth for the robot model;
-nothing under `third-party/` knows about it yet (see "What ProtoMotions still needs").
+with a floating base. This directory is the single source of truth for the robot model.
+ProtoMotions loads it through `robocup_rl/robots/triton_humanoid.py` (see "ProtoMotions
+integration").
 
 ## Files
 
 | File                           | What it is                                                                                     |
 | ------------------------------ | ---------------------------------------------------------------------------------------------- |
 | `triton_humanoid.xml`          | The robot: bodies, joints, inertials, meshes, collision geoms. Root `<freejoint/>`. No actuators. |
-| `triton_humanoid_actuated.xml` | Includes the robot and adds 10 position actuators (kp 100/80/20, kv 1, ±120 Nm).                |
-| `scene.xml`                    | Includes the actuated robot and adds a floor plane and a light.                                |
+| `triton_humanoid_actuated.xml` | Includes the robot and adds 10 position actuators. **This is the file ProtoMotions loads.** ProtoMotions ignores the kp/kv/forcerange here and uses the gains declared in `robocup_rl/robots/triton_humanoid.py`; a test keeps the two equal. Its empty `<worldbody/>` is where ProtoMotions' MuJoCo loader injects its own floor. |
+| `scene.xml`                    | Includes the actuated robot and adds a floor plane and a light, for standalone MuJoCo only. ProtoMotions never loads it and supplies its own floor at z=0. |
 | `meshes/stl/`                  | All STL meshes, in millimetres (scaled by 0.001 in the MJCF). See inventory below.             |
 
-Load `scene.xml` for a standalone MuJoCo test. Load `triton_humanoid.xml` when a framework
-supplies its own ground and control, which is what ProtoMotions does.
+Load `scene.xml` for a standalone MuJoCo test. `triton_humanoid.xml` on its own has no
+actuators; ProtoMotions' MuJoCo backend needs one per joint, so it loads the actuated file.
 
 View it (with `.venv-mujoco` active, from the repo root):
 
@@ -83,27 +84,39 @@ They are kept for rendering or re-decimation; drop them from the MJCF's perspect
 
 ## Known gaps
 
+- **Every body frame sits at the same point.** All bodies have `pos="0 0 0"` and joints carry
+  absolute positions, so at the zero pose every body's frame origin coincides with the base
+  (`mj_forward` gives identical `xpos` for all 13 bodies; only the inertial COMs differ).
+  ProtoMotions' observations, trackable bodies, contact heights and fall termination all use
+  body frame positions, so until the model is rewritten in link-local frames those carry no
+  per-limb position information, and upstream's `identify_robot_facing_axis.py` fails on it.
+- **Left/right naming looks mirrored.** With the toes pointing to +y, the leg named `left_*`
+  sits on the robot's right (+x). Harmless for symmetric locomotion rewards; matters the
+  moment anything uses left/right semantics (retargeting, asymmetric gaits). Decide whether
+  to rename in the xml or in the config's body mapping.
 - Validate the rigid-link grouping and CAD frames; consider rewriting in link-local frames.
 - Replace the placeholder torso inertial once the upper body is modelled.
 - Verify actuator torque limits and gains against the hardware.
 - Decide whether the ~103 MB of high-resolution meshes should stay in git.
 
-## What ProtoMotions still needs
+## ProtoMotions integration
 
-None of this is done yet. See `docs/protomotions.md` for where it goes.
+- **Config:** `robocup_rl/robots/triton_humanoid.py` (`TritonHumanoidConfig`). It points at
+  `triton_humanoid_actuated.xml` with an absolute `asset_root`, maps feet to `left_foot` /
+  `right_foot`, torso and head to `torso`, and the mandatory hand keys to the hip-roll links
+  (the robot has none; training never reads them), and declares the PD gains, ±120 Nm
+  limits, `default_root_height` 0.71 m and the zero (CAD) default pose. All of these are
+  placeholders until verified against hardware.
+- **Registration:** the `triton_humanoid` entry point in the root `pyproject.toml`, resolved
+  by the hook in ProtoMotions' robot factory (see `docs/protomotions.md`). After `uv sync`,
+  `--robot-name triton_humanoid` works everywhere.
+- **Forward axis:** `(0, 1)`: the toes point to +y and knee flexion swings the foot to -y.
+  Upstream's `identify_robot_facing_axis.py` cannot verify it on this model (see the first
+  known gap below).
+- **Tests:** `pytest` runs `tests/test_triton_humanoid.py` (entry point, kinematics, gains
+  equal to the xml, a headless MuJoCo step).
+- **First experiment:** `robocup_rl/experiments/steering/config.py`, plain PPO with no motion data.
+- **No USD needed.** IsaacLab converts the MJCF at runtime and caches it.
 
-- **Robot file:** `triton_humanoid.xml`. ProtoMotions adds its own ground and PD control;
-  `triton_humanoid_actuated.xml` and `scene.xml` are for standalone MuJoCo only.
-- **A `RobotConfig` subclass** with `semantic_forward_axis_xy` (find it with
-  `third-party/protomotions/scripts/identify_robot_facing_axis.py`), PD gains per joint,
-  trackable bodies, and default root height. The config asserts that
-  `all_left_hand_bodies`, `all_right_hand_bodies`, and `head_body_name` exist even though
-  this robot has none; map head to `torso` and hands to empty lists or `hip`.
-- **One line** in `third-party/protomotions/protomotions/robot_configs/factory.py` to resolve
-  `--robot-name triton_humanoid`.
-- **A URDF** for the PyRoki retargeter (it does not read MJCF). Not present; generate it
-  from `triton_humanoid.xml`, joint tree only, no visual meshes needed.
-- **A legs-only retargeting script**, copied from
-  `third-party/protomotions/pyroki/batch_retarget_to_g1_from_keypoints.py` with the
-  shoulder, elbow, and wrist keypoints removed from the map.
-- **No USD.** IsaacLab converts the MJCF at runtime and caches it.
+Still missing: a URDF and a legs-only retargeting script for the PyRoki retargeter
+(`third-party/protomotions/pyroki/batch_retarget_to_g1_from_keypoints.py` is G1-specific).

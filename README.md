@@ -7,6 +7,24 @@ so a clone of this repo is everything you need.
 
 Before touching anything under `third-party/`, read [docs/protomotions.md](docs/protomotions.md).
 
+## Layout
+
+| Path                      | What                                                                                              |
+| ------------------------- | ------------------------------------------------------------------------------------------------- |
+| `robots/<robot>/`         | Robot descriptions (MJCF, meshes). See `robots/triton_humanoid/README.md`.                        |
+| `robocup_rl/`             | Our package: robot configs and one directory per experiment, each holding its own `results/`. Installed editable by `uv sync`; registers robots with ProtoMotions via entry points. |
+| `tests/`                  | `pytest` smoke tests (needs the `dev` extra).                                                     |
+| `third-party/`            | Vendored ProtoMotions and IsaacLab subtrees. Owner approval needed for edits.                      |
+
+With an environment active (below):
+
+```sh
+pytest                                   # config loads, gains match the xml, MuJoCo steps
+cd robocup_rl/experiments/steering       # run from the experiment dir: outputs go to its results/<run>/
+protomotions-train-agent --robot-name triton_humanoid --simulator mujoco --num-envs 1 --batch-size 32 \
+  --motion-file none --experiment-path config.py --experiment-name first_run --headless
+```
+
 ## Environments
 
 ProtoMotions supports several physics backends, and their dependencies conflict
@@ -42,9 +60,12 @@ does not exist here, and would quietly create a fourth environment.
 ```sh
 uv venv .venv-mujoco --python 3.11
 source .venv-mujoco/bin/activate
-uv sync --active --extra mujoco          # installs third-party/protomotions in place
+uv sync --active --extra mujoco          # installs third-party/protomotions and robocup_rl in place
 protomotions info --json                 # smoke test: prints the asset root and which simulators import
 ```
+
+If `uv sync` cannot resolve on your platform (older macOS, see above) but you have a working
+env anyway, `uv pip install --no-deps -e .` still installs `robocup_rl` and its entry points.
 
 - **After `git pull`:** `uv sync --active --extra mujoco` again. uv re-resolves if the
   vendored `pyproject.toml` changed.
