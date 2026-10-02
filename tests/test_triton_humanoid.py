@@ -1,4 +1,13 @@
-"""Smoke tests for the triton_humanoid ProtoMotions integration. CPU only; run in .venv-mujoco."""
+"""Smoke tests for the triton_humanoid ProtoMotions integration.
+
+The config and kinematics tests are CPU-only and run in .venv-mujoco. The simulator tests are
+parametrized over the backends: the mujoco case runs on CPU anywhere, the newton case needs
+the `newton` extra and a CUDA device (run `pytest -v tests/` on a GPU machine) and skips
+otherwise. IsaacLab has its own file because it must start Isaac
+Sim before torch is imported.
+"""
+
+import argparse
 
 import pytest
 import torch
@@ -29,7 +38,8 @@ def test_kinematics():
     assert cfg.number_of_actions == 10
     assert cfg.kinematic_info.num_bodies == 13
     assert cfg.kinematic_info.dof_names == JOINTS
-    assert cfg.contact_bodies == ["left_foot", "right_foot"]
+    # All bodies get contact sensors; only the feet may touch the ground without terminating.
+    assert cfg.contact_bodies == cfg.kinematic_info.body_names
     assert cfg.non_termination_contact_bodies == ["left_foot", "right_foot"]
     assert cfg.anchor_body_name in cfg.kinematic_info.body_names
 
@@ -49,62 +59,103 @@ def test_gains_match_actuated_xml():
         assert model.actuator_forcerange[i, 1] == pytest.approx(info.effort_limit), joint
 
 
-def test_mujoco_simulator_steps_without_falling_through_the_floor():
+# --- simulator-backed tests -------------------------------------------------------------
+
+
+class Backend:
+    def __init__(self, name: str, device: torch.device, num_envs: int):
+        self.name = name
+        self.device = device
+        self.num_envs = num_envs
+
+    def __repr__(self):
+        return f"{self.name}:{self.device}:{self.num_envs}"
+
+
+@pytest.fixture(params=["mujoco", "newton"])
+def backend(request) -> Backend:
+    name = request.param
+    if name == "mujoco":
+        # Upstream's MuJoCo backend is single-env.
+        return Backend(name, torch.device("cpu"), num_envs=1)
+    pytest.importorskip("newton")
+    if not torch.cuda.is_available():
+        pytest.skip("newton (mujoco-warp) needs a CUDA device")
+    # More than one env so that ModelBuilder.replicate() and per-env indexing are exercised.
+    return Backend(name, torch.device("cuda:0"), num_envs=4)
+
+
+def _build_simulator(backend: Backend, cfg, terrain=None, scene_lib=None):
     from protomotions.components.scene_lib import SceneLib
     from protomotions.components.terrains.config import TerrainConfig
     from protomotions.components.terrains.terrain import Terrain
     from protomotions.simulator.factory import simulator_config
     from protomotions.utils.hydra_replacement import get_class
 
-    device = torch.device("cpu")
-    cfg = TritonHumanoidConfig()
-    sim_cfg = simulator_config("mujoco", cfg, headless=True, num_envs=1, experiment_name="smoke")
+    n, device = backend.num_envs, backend.device
+    sim_cfg = simulator_config(backend.name, cfg, headless=True, num_envs=n, experiment_name="smoke")
+    terrain = terrain or Terrain(config=TerrainConfig(), num_envs=n, device=device)
+    scene_lib = scene_lib or SceneLib.empty(num_envs=n, device=device)
     sim = get_class(sim_cfg._target_)(
-        config=sim_cfg,
-        robot_config=cfg,
-        terrain=Terrain(config=TerrainConfig(), num_envs=1, device=device),
-        device=device,
-        scene_lib=SceneLib.empty(num_envs=1, device=device),
+        config=sim_cfg, robot_config=cfg, terrain=terrain, scene_lib=scene_lib, device=device
     )
+    return sim, terrain, scene_lib
+
+
+def test_simulator_steps_without_falling_through_the_floor(backend: Backend):
+    cfg = TritonHumanoidConfig()
+    sim, _, _ = _build_simulator(backend, cfg)
     try:
         sim._initialize_with_markers({})
-        sim.reset_envs(sim.get_default_robot_reset_state(), env_ids=torch.arange(1))
+        sim.reset_envs(
+            sim.get_default_robot_reset_state(),
+            env_ids=torch.arange(backend.num_envs, device=backend.device),
+        )
         for _ in range(20):
-            sim.step(torch.zeros(1, cfg.number_of_actions))
-        root_z = sim.get_root_state().root_pos[0, 2].item()
+            sim.step(torch.zeros(backend.num_envs, cfg.number_of_actions, device=backend.device))
+        root_z = sim.get_root_state().root_pos[:, 2].cpu()
+        if backend.name == "newton":
+            _check_newton_dof_mapping(sim, cfg)
     finally:
         sim.close()
     # 20 steps at 50 Hz is 0.4 s; without a floor the root would have fallen ~0.8 m.
-    assert torch.isfinite(torch.tensor(root_z))
-    assert root_z > 0.3, f"root height {root_z:.3f}: did the MuJoCo loader inject its floor?"
+    assert torch.isfinite(root_z).all()
+    assert (root_z > 0.3).all(), f"root heights {root_z.tolist()}: is the floor missing?"
 
 
-def test_steering_experiment_env_steps_on_mujoco():
+def _check_newton_dof_mapping(sim, cfg):
+    """Newton matches our DOF names to the MJCF joints by substring, then assumes the builder's
+    DOF order equals ours. Check both the resolved mapping and the gains it wrote per DOF."""
+    assert list(sim._newton_dof_names) == JOINTS
+    assert list(sim.robot_view.joint_names) == JOINTS
+    # Builder DOFs 0-5 are the free joint; 6.. are ours, in order.
+    for i, joint in enumerate(JOINTS):
+        info = cfg.control.control_info[joint]
+        assert sim.robot.joint_target_ke[6 + i] == pytest.approx(info.stiffness), joint
+        assert sim.robot.joint_target_kd[6 + i] == pytest.approx(info.damping), joint
+        assert sim.robot.joint_effort_limit[6 + i] == pytest.approx(info.effort_limit), joint
+    assert sim.get_dof_state().dof_pos.shape == (sim.num_envs, len(JOINTS))
+
+
+def test_steering_experiment_env_steps(backend: Backend):
     """Build the env exactly as robocup_rl/experiments/steering/config.py configures it and step it."""
-    import argparse
-
     from protomotions.components.motion_lib import MotionLib
     from protomotions.components.scene_lib import SceneLib
     from protomotions.components.terrains.terrain import Terrain
     from protomotions.envs.base_env.env import BaseEnv
-    from protomotions.simulator.factory import simulator_config
-    from protomotions.utils.hydra_replacement import get_class
 
     from robocup_rl.experiments.steering import config as steering
 
-    device = torch.device("cpu")
+    n, device = backend.num_envs, backend.device
     args = argparse.Namespace(batch_size=32, training_max_steps=64)
     cfg = TritonHumanoidConfig()
-    sim_cfg = simulator_config("mujoco", cfg, headless=True, num_envs=1, experiment_name="smoke")
-    terrain = Terrain(config=steering.terrain_config(args), num_envs=1, device=device)
+    terrain = Terrain(config=steering.terrain_config(args), num_envs=n, device=device)
     scene_lib = SceneLib(
-        config=steering.scene_lib_config(args), num_envs=1, device=device, terrain=terrain
+        config=steering.scene_lib_config(args), num_envs=n, device=device, terrain=terrain
     )
     motion_lib = MotionLib.empty(device=device)
     assert steering.motion_lib_config(args).motion_file is None
-    simulator = get_class(sim_cfg._target_)(
-        config=sim_cfg, robot_config=cfg, terrain=terrain, scene_lib=scene_lib, device=device
-    )
+    simulator, _, _ = _build_simulator(backend, cfg, terrain=terrain, scene_lib=scene_lib)
     env = BaseEnv(
         config=steering.env_config(cfg, args),
         robot_config=cfg,
@@ -115,15 +166,28 @@ def test_steering_experiment_env_steps_on_mujoco():
         simulator=simulator,
     )
     try:
-        env.reset(torch.arange(1))
+        env.reset(torch.arange(n, device=device))
         obs = env.get_obs()
         assert set(steering.OBS_KEYS) <= set(obs)
         for _ in range(10):
             obs, rewards, dones, terminated, extras = env.step(
-                0.1 * torch.randn(1, cfg.number_of_actions)
+                0.1 * torch.randn(n, cfg.number_of_actions, device=device)
             )
+        assert rewards.shape == (n,)
         assert torch.isfinite(rewards).all()
         agent_cfg = steering.agent_config(cfg, env.config, args)
         assert agent_cfg.model.actor.num_out == cfg.number_of_actions
+
+        # Zero actions target the middle of every joint range (knees at -1.05 rad), which folds
+        # the robot onto the ground within ~40 control steps. Fall termination must notice:
+        # it needs contact flags on non-foot bodies, which the GPU backends only provide for
+        # bodies in robot_cfg.contact_bodies.
+        fell = torch.zeros(n, dtype=torch.bool, device=device)
+        for _ in range(150):
+            _, _, _, terminated, _ = env.step(torch.zeros(n, cfg.number_of_actions, device=device))
+            fell |= terminated.bool()
+            if fell.all():
+                break
+        assert fell.all(), "fall termination never fired; are contact sensors on all bodies?"
     finally:
         simulator.close()
