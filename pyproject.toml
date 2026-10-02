@@ -29,6 +29,10 @@ include = ["robocup_rl*"] # never collect robots/, docs/, third-party/
 
 [tool.pytest.ini_options]
 testpaths = ["tests"] # bare `pytest` never reaches the subtree's LFS-dependent tests
+# .venv-isaaclab carries hydra-core 1.4 (from IsaacLab's lock) next to omegaconf 2.3.0 (pinned by
+# protomotions); hydra's auto-loaded pytest plugin imports omegaconf.vendor and crashes pytest at
+# startup. Neither IsaacLab's core package nor ProtoMotions imports hydra, so just keep the plugin out.
+addopts = "-p no:hydra_pytest"
 
 [tool.uv]
 # Mirrors upstream's [tool.uv] conflicts; the simulator extras pin incompatible torch/wandb versions.
@@ -38,3 +42,9 @@ conflicts = [
 
 [tool.uv.sources]
 protomotions = { path = "third-party/protomotions", editable = true }
+
+# openmesh 1.2.1 (pulled in by every protomotions simulator extra, never imported) ships no
+# wheels and its setup.py calls cmake. Give its isolated build env the cmake wheel so uv can
+# compile it on hosts without a system cmake (the SCC login node); a C++ compiler is still needed.
+[tool.uv.extra-build-dependencies]
+openmesh = ["cmake<4"]  # its CMakeLists predates the 3.5 floor that CMake 4 enforces
