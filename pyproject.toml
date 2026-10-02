@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=69.5.1"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "robocup-simulations"
 version = "0.1.0"
@@ -14,9 +18,19 @@ mujoco = ["protomotions[mujoco]"]
 newton = ["protomotions[newton]"]
 dev = ["protomotions[dev]"]
 
-[tool.uv]
-package = false
+# Robots ProtoMotions can resolve by --robot-name. Read by the entry-point hook in
+# third-party/protomotions/protomotions/robot_configs/factory.py (see docs/protomotions.md).
+# Re-run `uv sync` after adding one; entry points are written at install time.
+[project.entry-points."protomotions.robots"]
+triton_humanoid = "robocup_rl.robots.triton_humanoid:TritonHumanoidConfig"
 
+[tool.setuptools.packages.find]
+include = ["robocup_rl*"] # never collect robots/, docs/, third-party/
+
+[tool.pytest.ini_options]
+testpaths = ["tests"] # bare `pytest` never reaches the subtree's LFS-dependent tests
+
+[tool.uv]
 # Mirrors upstream's [tool.uv] conflicts; the simulator extras pin incompatible torch/wandb versions.
 conflicts = [
   [{ extra = "mujoco" }, { extra = "newton" }],
