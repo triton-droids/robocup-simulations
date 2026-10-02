@@ -51,7 +51,7 @@ Joint names are `{left,right}_{hip1,hip2,thigh,knee,ankle}_joint`. 10 actuated D
 no head. Feet collide with `box` geoms; every other link collides with a convex hull mesh.
 
 Loading `scene.xml` gives 14 bodies, 11 joints (1 free + 10 hinge), 22 meshes, 10 actuators,
-and a total mass of 16.00 kg.
+and a total mass of 16.50 kg (16.00 kg from CAD plus the 0.5 kg base placeholder below).
 
 Note on coordinates: every body has `pos="0 0 0"` and joints carry absolute positions, so
 the model is written in the CAD assembly frame rather than in link-local frames. The export
@@ -64,8 +64,12 @@ From the export header, kept verbatim at the top of `triton_humanoid.xml`:
 - CAD assembly masses were normalized to a 16 kg total. Hip 3.46 kg, each leg about 6.3 kg.
 - Original centres of mass were retained; inertias were scaled per link.
 - The torso is a 1 g placeholder with a 1e-6 diagonal inertia.
-- Actuator gains and the 120 Nm force limits were copied from an older humanoid model and
-  are not verified hardware specifications.
+- `floating_base` carries a 0.5 kg placeholder inertial (added 2026-10-02, total now 16.5 kg):
+  with the free-joint body massless, Newton's MuJoCo Warp solver diverged to NaN under
+  saturated PD commands. Fold it into the real upper-body mass when that is modelled.
+- Actuator gains were copied from an older humanoid model and are not verified hardware
+  specifications. Its 120 Nm force limit was lowered to 40 Nm for the same stability reason
+  (see `robocup_rl/robots/triton_humanoid.py`); 40 Nm is a guess too.
 
 ## Mesh inventory (`meshes/stl/`)
 
@@ -104,9 +108,11 @@ They are kept for rendering or re-decimation; drop them from the MJCF's perspect
 - **Config:** `robocup_rl/robots/triton_humanoid.py` (`TritonHumanoidConfig`). It points at
   `triton_humanoid_actuated.xml` with an absolute `asset_root`, maps feet to `left_foot` /
   `right_foot`, torso and head to `torso`, and the mandatory hand keys to the hip-roll links
-  (the robot has none; training never reads them), and declares the PD gains, ±120 Nm
+  (the robot has none; training never reads them), and declares the PD gains, ±40 Nm
   limits, `default_root_height` 0.71 m and the zero (CAD) default pose. All of these are
-  placeholders until verified against hardware.
+  placeholders until verified against hardware. Contact sensors are on every body
+  (`contact_bodies="all"`): Newton and IsaacLab only sense listed bodies, and fall
+  termination needs a non-foot contact, so a feet-only list silently disables resets there.
 - **Registration:** the `triton_humanoid` entry point in the root `pyproject.toml`, resolved
   by the hook in ProtoMotions' robot factory (see `docs/protomotions.md`). After `uv sync`,
   `--robot-name triton_humanoid` works everywhere.

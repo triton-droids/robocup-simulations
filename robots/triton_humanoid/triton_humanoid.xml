@@ -41,6 +41,11 @@
   <worldbody>
     <body name="floating_base" pos="0 0 0.6846">
       <freejoint />
+      <!-- Placeholder inertial (not from CAD). The free joint sits on this body, and with the
+           body massless MuJoCo Warp (Newton) diverged to NaN under saturated PD commands;
+           0.5 kg here plus the 40 Nm actuator limits keeps it finite. Fold it into the real
+           upper-body mass when that is modelled. -->
+      <inertial pos="0 0 0" mass="0.5" diaginertia="0.002 0.002 0.002" />
       <site name="imu" />
       <body name="torso" pos="0.1505 0.008 -0.6996" >
         <site name="top" pos="-0.155 -0.016 0.765" size="0.01" rgba="0 1 0 1" />

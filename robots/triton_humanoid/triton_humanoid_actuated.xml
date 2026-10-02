@@ -4,18 +4,20 @@
        its floor and light into the <worldbody> it finds here. MuJoCo merges it with the
        included one. scene.xml adds the floor for standalone viewing instead. -->
   <worldbody />
-  <!-- Simulation baseline copied from origin/humanoid robot_description/humanoid.xml.
-       These gains and 120 Nm limits are not verified hardware specifications. -->
+  <!-- Simulation baseline: gains copied from origin/humanoid robot_description/humanoid.xml;
+       the force limit was lowered from that file's 120 Nm to 40 Nm because 120 Nm on ~1 kg
+       links made MuJoCo Warp (Newton) diverge under saturated commands. Neither value is a
+       verified hardware specification. -->
   <actuator>
-    <position name="left_hip1_act" joint="left_hip1_joint" kp="100" kv="1" forcelimited="true" forcerange="-120 120" />
-    <position name="left_hip2_act" joint="left_hip2_joint" kp="100" kv="1" forcelimited="true" forcerange="-120 120" />
-    <position name="left_thigh_act" joint="left_thigh_joint" kp="100" kv="1" forcelimited="true" forcerange="-120 120" />
-    <position name="left_knee_act" joint="left_knee_joint" kp="80" kv="1" forcelimited="true" forcerange="-120 120" />
-    <position name="left_ankle_act" joint="left_ankle_joint" kp="20" kv="1" forcelimited="true" forcerange="-120 120" />
-    <position name="right_hip1_act" joint="right_hip1_joint" kp="100" kv="1" forcelimited="true" forcerange="-120 120" />
-    <position name="right_hip2_act" joint="right_hip2_joint" kp="100" kv="1" forcelimited="true" forcerange="-120 120" />
-    <position name="right_thigh_act" joint="right_thigh_joint" kp="100" kv="1" forcelimited="true" forcerange="-120 120" />
-    <position name="right_knee_act" joint="right_knee_joint" kp="80" kv="1" forcelimited="true" forcerange="-120 120" />
-    <position name="right_ankle_act" joint="right_ankle_joint" kp="20" kv="1" forcelimited="true" forcerange="-120 120" />
+    <position name="left_hip1_act" joint="left_hip1_joint" kp="100" kv="1" forcelimited="true" forcerange="-40 40" />
+    <position name="left_hip2_act" joint="left_hip2_joint" kp="100" kv="1" forcelimited="true" forcerange="-40 40" />
+    <position name="left_thigh_act" joint="left_thigh_joint" kp="100" kv="1" forcelimited="true" forcerange="-40 40" />
+    <position name="left_knee_act" joint="left_knee_joint" kp="80" kv="1" forcelimited="true" forcerange="-40 40" />
+    <position name="left_ankle_act" joint="left_ankle_joint" kp="20" kv="1" forcelimited="true" forcerange="-40 40" />
+    <position name="right_hip1_act" joint="right_hip1_joint" kp="100" kv="1" forcelimited="true" forcerange="-40 40" />
+    <position name="right_hip2_act" joint="right_hip2_joint" kp="100" kv="1" forcelimited="true" forcerange="-40 40" />
+    <position name="right_thigh_act" joint="right_thigh_joint" kp="100" kv="1" forcelimited="true" forcerange="-40 40" />
+    <position name="right_knee_act" joint="right_knee_joint" kp="80" kv="1" forcelimited="true" forcerange="-40 40" />
+    <position name="right_ankle_act" joint="right_ankle_joint" kp="20" kv="1" forcelimited="true" forcerange="-40 40" />
   </actuator>
 </mujoco>

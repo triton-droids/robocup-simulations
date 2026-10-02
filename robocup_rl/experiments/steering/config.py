@@ -6,17 +6,17 @@ discriminator are involved, so this is the first thing that runs on triton_human
 before any retargeted data exists. Expect clumsy gaits: nothing here rewards style.
 
 Run from this directory so results/<run> lands next to this file (ProtoMotions writes to
-results/<experiment-name> under the current working directory). MuJoCo is single-env, so
-batch_size must divide num_envs * num_steps = 1 * 32:
+results/<experiment-name> under the current working directory). Train on Newton (GPU);
+batch_size must divide num_envs * num_steps (32 by default):
 
     cd robocup_rl/experiments/steering
-    protomotions-train-agent --robot-name triton_humanoid --simulator mujoco \
-        --num-envs 1 --batch-size 32 --motion-file none \
+    protomotions-train-agent --robot-name triton_humanoid --simulator newton \
+        --num-envs 1024 --batch-size 4096 --motion-file none \
         --experiment-path config.py --experiment-name <run> --headless
 
 --motion-file is required by the CLI but ignored by this file. Do not pass it at
 inference: protomotions-inference-agent would then override motion_file with it.
-Many parallel envs need Newton (--simulator newton on a GPU box).
+The MuJoCo env is single-env and for inspecting and evaluating checkpoints, not training.
 """
 
 import argparse
@@ -52,6 +52,7 @@ def env_config(robot_cfg: RobotConfig, args: argparse.Namespace) -> EnvConfig:
     from protomotions.envs.action import make_pd_action_config
     from protomotions.envs.component_factories import (
         fall_termination_factory,
+        joint_limit_termination_factory,
         max_coords_obs_factory,
         steering_obs_factory,
         steering_reward_factory,
@@ -69,7 +70,17 @@ def env_config(robot_cfg: RobotConfig, args: argparse.Namespace) -> EnvConfig:
             "steering": steering_obs_factory(),
         },
         reward_components={"heading_rew": steering_reward_factory(weight=1.0)},
-        termination_components={"fall": fall_termination_factory(termination_height=0.15)},
+        termination_components={
+            "fall": fall_termination_factory(termination_height=0.15),
+            # A joint driven >1 rad past its limit is the first sign of the simulator diverging
+            # (upstream's words). Resetting that env beats the non-finite-state assertion that
+            # otherwise kills the whole run a few steps later; seen on Newton with saturated actions.
+            "joint_limit": joint_limit_termination_factory(
+                dof_limits_lower=robot_cfg.kinematic_info.dof_limits_lower,
+                dof_limits_upper=robot_cfg.kinematic_info.dof_limits_upper,
+                max_violation=1.0,
+            ),
+        },
         action_config=make_pd_action_config(robot_cfg),
     )
 

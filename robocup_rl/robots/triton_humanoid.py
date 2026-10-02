@@ -27,9 +27,15 @@ from robocup_rl.paths import ROBOTS_DIR
 # actuators at load; Newton and IsaacLab build their own). They mirror the xml, and
 # tests/test_triton_humanoid.py fails if the two drift apart. None of them are verified
 # hardware specifications. VELOCITY_LIMIT has no counterpart in the xml.
+#
+# EFFORT_LIMIT was 120 Nm (copied from an older humanoid). With kp=100 on ~1 kg links that let
+# saturated actions put 10^4 rad/s into the joints and MuJoCo Warp (Newton) went non-finite
+# within ~20 control steps; MuJoCo CPU survived only thanks to float64. 40 Nm together with the
+# 0.5 kg placeholder mass on floating_base in the xml keeps 1024 Newton envs finite for 400
+# steps of saturated random actions (probed 2026-10-02); either change alone was not enough.
 STIFFNESS = {"hip1": 100.0, "hip2": 100.0, "thigh": 100.0, "knee": 80.0, "ankle": 20.0}
 DAMPING = 1.0
-EFFORT_LIMIT = 120.0
+EFFORT_LIMIT = 40.0
 VELOCITY_LIMIT = 20.0
 ARMATURE = 0.01  # joint armature in triton_humanoid.xml
 
@@ -95,9 +101,12 @@ class TritonHumanoidConfig(RobotConfig):
         ]
     )
 
-    contact_bodies: List[str] = field(
-        default_factory=lambda: ["all_left_foot_bodies", "all_right_foot_bodies"]
-    )
+    # Every body, not just the feet. Newton and IsaacLab only create contact sensors for the
+    # bodies listed here, and fall termination fires only when a body *outside*
+    # non_termination_contact_bodies reports contact, so a feet-only list means a fallen robot
+    # is never reset on the GPU backends (MuJoCo reports contacts for all bodies regardless).
+    # 13 sensors is cheap.
+    contact_bodies: str = "all"
 
     # Real body names: this field is not expanded from the common-naming keys. Leaving the
     # default ("all") would make fall termination never fire.

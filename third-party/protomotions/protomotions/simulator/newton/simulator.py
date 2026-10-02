@@ -515,6 +515,33 @@ class NewtonSimulator(Simulator):
         mj_geom_gap[:] = 0.01
         self.solver.mjw_model.geom_gap = wp.from_torch(mj_geom_gap, dtype=wp.float32)
 
+        # robocup-simulations: Newton 1.0's SolverMuJoCo builds one position actuator per
+        # actuated DOF from joint_target_ke/kd but leaves actuator_forcerange at 0 and
+        # actuator_forcelimited False, so the ControlInfo effort limits that
+        # _configure_builder_joint_properties wrote to joint_effort_limit never reach MuJoCo
+        # Warp and BUILT_IN_PD torque is unbounded (seen as joints running thousands of rad past
+        # their limits and a non-finite state on triton_humanoid). Clamp the actuators here,
+        # in the same DOF order _setup_explicit_pd_arrays uses.
+        if self.control_type == ControlType.BUILT_IN_PD:
+            limits = wp.to_torch(self._pd_torque_limits_wp)
+            forcerange = wp.to_torch(self.solver.mjw_model.actuator_forcerange)
+            forcelimited = wp.to_torch(self.solver.mjw_model.actuator_forcelimited)
+            if forcerange.shape[-2] == limits.shape[0]:
+                forcerange[..., :, 0] = -limits
+                forcerange[..., :, 1] = limits
+                forcelimited[...] = True
+                self.solver.mjw_model.actuator_forcerange = wp.from_torch(
+                    forcerange, dtype=wp.vec2
+                )
+                self.solver.mjw_model.actuator_forcelimited = wp.from_torch(
+                    forcelimited, dtype=wp.bool
+                )
+            else:
+                print(
+                    f"[WARN] not clamping actuator forces: {forcerange.shape} actuators vs "
+                    f"{limits.shape[0]} effort limits"
+                )
+
         self.viewer = None
         if not self.headless:
             self.viewer = newton.viewer.ViewerGL()

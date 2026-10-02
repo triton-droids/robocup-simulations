@@ -18,12 +18,27 @@ git log -1 --grep='^git-subtree-dir: third-party/protomotions/*$' \
   ProtoMotions fix rather than RoboCup-specific, send it upstream to NVlabs and let the
   sync bring it in.
 - **Keep subtree edits small and local.** Our robot, its config, experiments, and tests
-  live outside the subtree (`robots/`, `robocup_rl/`, `tests/`). The only local change
-  inside it is the robot-registration hook in `robot_configs/factory.py` (see "Adding our
-  robot"). Fewer touched upstream files means fewer conflicts at sync time.
+  live outside the subtree (`robots/`, `robocup_rl/`, `tests/`). The local changes inside it
+  are listed under "Local changes" below: the robot-registration hook in
+  `robot_configs/factory.py` and the Newton effort-limit pass-through. Fewer touched upstream
+  files means fewer conflicts at sync time.
 - **Merge sync PRs with a merge commit only.** Never squash-merge or rebase-merge them,
   and never rebase `main` across a sync merge. Both destroy the `git-subtree-split`
   trailer that the next sync depends on. The `main` ruleset enforces merge-commit-only.
+
+## Local changes
+
+Both are marked with `robocup-simulations` comments and are candidate upstream PRs.
+
+| File | Change | Why |
+| --- | --- | --- |
+| `protomotions/robot_configs/factory.py` | `else` branch resolves unknown robot names through the `protomotions.robots` entry-point group | lets our robots live outside the subtree |
+| `protomotions/simulator/newton/simulator.py` | `_setup_sim` copies the `ControlInfo` effort limits into MuJoCo Warp's `actuator_forcerange` / `actuator_forcelimited` for `BUILT_IN_PD` | Newton 1.0's `SolverMuJoCo` creates the PD actuators without a force range, so on Newton the effort limits were silently ignored while the MuJoCo backend enforces them; unbounded PD torque drove triton_humanoid's joints thousands of radians past their limits and into a non-finite state |
+
+If a sync conflicts on either file, take upstream's version and re-apply the few lines
+(`git log -p` on the file shows them). `protomotions-train-agent` itself needs a GPU
+(`FabricConfig` hardcodes `accelerator="gpu"`); the MuJoCo env is for inspecting and
+evaluating, not training.
 
 ## Binary assets
 
