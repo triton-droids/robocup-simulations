@@ -1,8 +1,11 @@
 # Anchored on purpose: unanchored patterns would reach into third-party/protomotions.
-/results/
-/outputs/
-/wandb/
+# ProtoMotions writes results/ (and wandb/ if enabled) under the cwd; runs are launched from
+# inside their experiment directory, so that is where they land.
+/robocup_rl/experiments/*/results/
+/robocup_rl/experiments/*/wandb/
 /.venv*/
+# Written by the editable install of robocup_rl.
+/robocup_simulations.egg-info/
 /venv/
 __pycache__/
 *.pyc

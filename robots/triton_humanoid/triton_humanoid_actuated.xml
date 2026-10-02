@@ -1,5 +1,9 @@
 <mujoco model="triton_humanoid_actuated">
   <include file="triton_humanoid.xml" />
+  <!-- Empty on purpose: ProtoMotions' MuJoCo loader only edits this top-level file and adds
+       its floor and light into the <worldbody> it finds here. MuJoCo merges it with the
+       included one. scene.xml adds the floor for standalone viewing instead. -->
+  <worldbody />
   <!-- Simulation baseline copied from origin/humanoid robot_description/humanoid.xml.
        These gains and 120 Nm limits are not verified hardware specifications. -->
   <actuator>
