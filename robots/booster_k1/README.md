@@ -113,8 +113,9 @@ policy does the balancing).
 ## Known gaps
 
 - Gains, limits and the ankle armature split are Booster's simulation values, not measured.
-- `default_root_height` (0.552 m) is the geometric standing height; nothing has been settled
-  under ProtoMotions on a GPU backend yet.
+- `default_root_height` (0.552 m) is the geometric standing height. On Newton and IsaacLab the
+  robot stands on reset (smoke tests), and a 20-iteration steering run on Newton trained
+  normally (`k1_newton_smoke`, 2026-10-03); nothing longer has been run yet.
 - No URDF is vendored, so the PyRoki retargeter is not set up for this robot either.
 - Booster's K1 motion CSVs (50 Hz, root pose + 22 joint angles) are not vendored; they are
   the obvious source for the first mimic or AMP experiment.

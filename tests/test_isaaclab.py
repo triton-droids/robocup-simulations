@@ -36,7 +36,11 @@ NUM_ENVS = 4
 
 
 @pytest.fixture(scope="module")
-def simulator(request):
+def simulator(request, tmp_path_factory):
+    # Module-scoped, so conftest's per-test chdir does not cover it: move out of the repo
+    # ourselves, or the recorder drops output/renderings at the repo root when Kit starts.
+    cwd = os.getcwd()
+    os.chdir(tmp_path_factory.mktemp("isaaclab"))
     from protomotions.components.scene_lib import SceneLib
     from protomotions.components.terrains.config import TerrainConfig
     from protomotions.components.terrains.terrain import Terrain
@@ -59,6 +63,7 @@ def simulator(request):
     sim._initialize_with_markers({})
     yield sim, cfg
     sim.close()
+    os.chdir(cwd)
 
 
 def test_isaaclab_simulator_steps_without_falling_through_the_floor(simulator):
