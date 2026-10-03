@@ -27,6 +27,7 @@ declares our robots there:
 ```toml
 [project.entry-points."protomotions.robots"]
 triton_humanoid = "robocup_rl.robots.triton_humanoid:TritonHumanoidConfig"
+booster_k1 = "robocup_rl.robots.booster_k1:BoosterK1Config"
 ```
 
 The entry point is a zero-argument callable returning a [`RobotConfig`](../third-party/protomotions/protomotions/robot_configs/base.py); a dataclass subclass
@@ -37,8 +38,10 @@ factory will report the robot as unknown.
 ## Adding a robot
 
 1. Put the MJCF and meshes in `../robots/<robot>/`. ProtoMotions' MuJoCo backend needs one
-   actuator per joint, a `<freejoint/>` root that is the only child of `<worldbody>`, and a
-   `<worldbody>` element in the file it loads (it injects its floor and light there).
+   actuator per joint, a free root joint (`<freejoint/>` or `<joint type="free"/>`) on the only
+   child of `<worldbody>`, and a `<worldbody>` element in the file it loads (it injects its
+   floor and light there). Strip any floor, lights and sensors the vendor's file carries;
+   `../robots/booster_k1/` shows the edits for a stock MJCF.
 2. Write `robots/<robot>.py`, mirroring `robots/triton_humanoid.py`. Use an absolute
    `asset_root` (`paths.ROBOTS_DIR`). Fill all six `common_naming_to_robot_body_names` keys
    even if the robot lacks the body; set `non_termination_contact_bodies` to real body
@@ -73,7 +76,8 @@ protomotions-train-agent --robot-name triton_humanoid --simulator newton \
   --experiment-path config.py --experiment-name <run> --headless
 ```
 
-Train on Newton or IsaacLab (GPU); the MuJoCo env is single-env and for inspection and
-evaluation only. The CLI still requires `--motion-file`; pass `none` for motion-free
-experiments and leave it out at inference. `batch_size` must divide `num_envs * num_steps`
+`--robot-name` is any registered robot (`triton_humanoid`, `booster_k1`); the experiment
+file reads everything it needs from `robot_cfg`. Train on Newton or IsaacLab (GPU); the
+MuJoCo env is single-env and for inspection and evaluation only. The CLI still requires
+`--motion-file`; pass `none` for motion-free experiments and leave it out at inference. `batch_size` must divide `num_envs * num_steps`
 (32 by default).

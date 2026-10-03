@@ -111,7 +111,10 @@ outside the subtree instead and register the robot through a Python entry point:
 `uv sync` (or `uv pip install -e .`) writes the entry point; `--robot-name <robot>` then
 works in `protomotions-train-agent`, inference, and every upstream helper script, because
 they all go through `robot_config()`. Adding another robot is a config file plus one
-pyproject line; the subtree is not touched again.
+pyproject line; the subtree is not touched again. `booster_k1` (`robots/booster_k1/`, Booster's
+stock MJCF with its scene and actuators stripped) is the second robot registered this way, and
+`identify_robot_facing_axis.py --robots booster_k1 --assert-declared` confirms its forward axis
+(it cannot for `triton_humanoid`, see that robot's README).
 
 If a sync conflicts on `factory.py`, take upstream's version and re-apply the hook: the
 `else` branch becomes `config = _robot_config_from_entry_point(robot_name)` and the helper

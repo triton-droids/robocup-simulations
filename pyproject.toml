@@ -23,6 +23,7 @@ dev = ["protomotions[dev]"]
 # Re-run `uv sync` after adding one; entry points are written at install time.
 [project.entry-points."protomotions.robots"]
 triton_humanoid = "robocup_rl.robots.triton_humanoid:TritonHumanoidConfig"
+booster_k1 = "robocup_rl.robots.booster_k1:BoosterK1Config"
 
 [tool.setuptools.packages.find]
 include = ["robocup_rl*"] # never collect robots/, docs/, third-party/
@@ -33,6 +34,10 @@ testpaths = ["tests"] # bare `pytest` never reaches the subtree's LFS-dependent 
 # protomotions); hydra's auto-loaded pytest plugin imports omegaconf.vendor and crashes pytest at
 # startup. Neither IsaacLab's core package nor ProtoMotions imports hydra, so just keep the plugin out.
 addopts = "-p no:hydra_pytest"
+
+[tool.ruff]
+extend-exclude = ["third-party"] # vendored subtrees are never linted or formatted here
+line-length = 100
 
 [tool.uv]
 # Mirrors upstream's [tool.uv] conflicts; the simulator extras pin incompatible torch/wandb versions.

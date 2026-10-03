@@ -3,8 +3,8 @@
 The config and kinematics tests are CPU-only and run in .venv-mujoco. The simulator tests are
 parametrized over the backends: the mujoco case runs on CPU anywhere, the newton case needs
 the `newton` extra and a CUDA device (run `pytest -v tests/` on a GPU machine) and skips
-otherwise. IsaacLab has its own file because it must start Isaac
-Sim before torch is imported.
+otherwise. The `backend` fixture and `build_simulator` live in conftest.py. IsaacLab has its own
+file (tests/test_isaaclab.py) because it must start Isaac Sim before torch is imported.
 """
 
 import argparse
@@ -18,6 +18,8 @@ from protomotions.robot_configs.factory import robot_config  # noqa: E402
 
 from robocup_rl.paths import ROBOTS_DIR  # noqa: E402
 from robocup_rl.robots.triton_humanoid import TritonHumanoidConfig  # noqa: E402
+
+from conftest import Backend, build_simulator  # noqa: E402
 
 JOINTS = [
     f"{side}_{joint}_joint"
@@ -62,49 +64,9 @@ def test_gains_match_actuated_xml():
 # --- simulator-backed tests -------------------------------------------------------------
 
 
-class Backend:
-    def __init__(self, name: str, device: torch.device, num_envs: int):
-        self.name = name
-        self.device = device
-        self.num_envs = num_envs
-
-    def __repr__(self):
-        return f"{self.name}:{self.device}:{self.num_envs}"
-
-
-@pytest.fixture(params=["mujoco", "newton"])
-def backend(request) -> Backend:
-    name = request.param
-    if name == "mujoco":
-        # Upstream's MuJoCo backend is single-env.
-        return Backend(name, torch.device("cpu"), num_envs=1)
-    pytest.importorskip("newton")
-    if not torch.cuda.is_available():
-        pytest.skip("newton (mujoco-warp) needs a CUDA device")
-    # More than one env so that ModelBuilder.replicate() and per-env indexing are exercised.
-    return Backend(name, torch.device("cuda:0"), num_envs=4)
-
-
-def _build_simulator(backend: Backend, cfg, terrain=None, scene_lib=None):
-    from protomotions.components.scene_lib import SceneLib
-    from protomotions.components.terrains.config import TerrainConfig
-    from protomotions.components.terrains.terrain import Terrain
-    from protomotions.simulator.factory import simulator_config
-    from protomotions.utils.hydra_replacement import get_class
-
-    n, device = backend.num_envs, backend.device
-    sim_cfg = simulator_config(backend.name, cfg, headless=True, num_envs=n, experiment_name="smoke")
-    terrain = terrain or Terrain(config=TerrainConfig(), num_envs=n, device=device)
-    scene_lib = scene_lib or SceneLib.empty(num_envs=n, device=device)
-    sim = get_class(sim_cfg._target_)(
-        config=sim_cfg, robot_config=cfg, terrain=terrain, scene_lib=scene_lib, device=device
-    )
-    return sim, terrain, scene_lib
-
-
 def test_simulator_steps_without_falling_through_the_floor(backend: Backend):
     cfg = TritonHumanoidConfig()
-    sim, _, _ = _build_simulator(backend, cfg)
+    sim, _, _ = build_simulator(backend, cfg)
     try:
         sim._initialize_with_markers({})
         sim.reset_envs(
@@ -155,7 +117,7 @@ def test_steering_experiment_env_steps(backend: Backend):
     )
     motion_lib = MotionLib.empty(device=device)
     assert steering.motion_lib_config(args).motion_file is None
-    simulator, _, _ = _build_simulator(backend, cfg, terrain=terrain, scene_lib=scene_lib)
+    simulator, _, _ = build_simulator(backend, cfg, terrain=terrain, scene_lib=scene_lib)
     env = BaseEnv(
         config=steering.env_config(cfg, args),
         robot_config=cfg,

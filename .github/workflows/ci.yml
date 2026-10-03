@@ -1,0 +1,55 @@
+# Lint and the CPU test suite on every pull request and push to main.
+#
+# What this does not cover: anything that needs a GPU. Newton stepping, the IsaacLab suite
+# (tests/test_isaaclab.py) and training all run by hand on a GPU machine; the Newton cases
+# skip themselves here and test_isaaclab.py skips at import.
+#
+# Two things to know:
+# - The committed uv.lock pins the CUDA build of torch, so the install pulls the nvidia-*
+#   wheels even for the MuJoCo env. The uv cache makes that a one-time cost per lock change.
+# - Pull requests opened by sync-protomotions.yml do not trigger this workflow (GITHUB_TOKEN
+#   never fires other workflows). Run it on those with "Run workflow" (workflow_dispatch)
+#   against the sync branch, or close and reopen the PR. See docs/protomotions.md.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10.2.0
+      # Our code only; third-party/ is excluded in [tool.ruff]. Pinned so a ruff release
+      # cannot turn an unrelated PR red. No `ruff format --check`: the formatter's output
+      # shifts between ruff versions.
+      - run: uvx ruff@0.14.3 check robocup_rl tests
+
+  test:
+    name: Tests (CPU, MuJoCo)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: "3.11"
+          enable-cache: true
+      # The same env as .venv-mujoco in the README. --locked fails if uv.lock is stale.
+      - run: uv sync --locked --extra mujoco --extra dev
+      - name: Smoke test
+        run: uv run protomotions info --json
+      - name: Tests
+        run: uv run pytest -q --durations=10

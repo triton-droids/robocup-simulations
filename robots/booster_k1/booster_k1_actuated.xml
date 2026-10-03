@@ -1,0 +1,35 @@
+<mujoco model="booster_k1_actuated">
+  <include file="booster_k1.xml" />
+  <!-- Empty on purpose: ProtoMotions' MuJoCo loader only edits this top-level file and adds
+       its floor and light into the <worldbody> it finds here. MuJoCo merges it with the
+       included one. scene.xml adds the floor for standalone viewing instead. -->
+  <worldbody />
+  <!-- Booster's simulation defaults, derived from the joint armatures as in BoosterRobotics/booster_train
+       (kp = armature * (2*pi*f)^2, kv = 2 * zeta * armature * 2*pi*f; legs f = 4 Hz, arms and head
+       f = 10 Hz). ProtoMotions ignores these values and uses robocup_rl/robots/booster_k1.py, which
+       derives the same numbers; a test keeps the two equal. Not verified hardware specifications. -->
+  <actuator>
+    <position name="aahead_yaw_act" joint="aahead_yaw_joint" kp="3.9478" kv="0.2513" forcelimited="true" forcerange="-6 6" />
+    <position name="aahead_pitch_act" joint="aahead_pitch_joint" kp="3.9478" kv="0.2513" forcelimited="true" forcerange="-6 6" />
+    <position name="aaleft_shoulder_pitch_act" joint="aaleft_shoulder_pitch_joint" kp="3.9478" kv="0.2513" forcelimited="true" forcerange="-14 14" />
+    <position name="left_shoulder_roll_act" joint="left_shoulder_roll_joint" kp="3.9478" kv="0.2513" forcelimited="true" forcerange="-14 14" />
+    <position name="left_elbow_pitch_act" joint="left_elbow_pitch_joint" kp="3.9478" kv="0.2513" forcelimited="true" forcerange="-14 14" />
+    <position name="left_elbow_yaw_act" joint="left_elbow_yaw_joint" kp="3.9478" kv="0.2513" forcelimited="true" forcerange="-14 14" />
+    <position name="aaright_shoulder_pitch_act" joint="aaright_shoulder_pitch_joint" kp="3.9478" kv="0.2513" forcelimited="true" forcerange="-14 14" />
+    <position name="right_shoulder_roll_act" joint="right_shoulder_roll_joint" kp="3.9478" kv="0.2513" forcelimited="true" forcerange="-14 14" />
+    <position name="right_elbow_pitch_act" joint="right_elbow_pitch_joint" kp="3.9478" kv="0.2513" forcelimited="true" forcerange="-14 14" />
+    <position name="right_elbow_yaw_act" joint="right_elbow_yaw_joint" kp="3.9478" kv="0.2513" forcelimited="true" forcerange="-14 14" />
+    <position name="left_hip_pitch_act" joint="left_hip_pitch_joint" kp="30.2010" kv="3.6050" forcelimited="true" forcerange="-68 68" />
+    <position name="left_hip_roll_act" joint="left_hip_roll_joint" kp="21.4480" kv="2.5602" forcelimited="true" forcerange="-43 43" />
+    <position name="left_hip_yaw_act" joint="left_hip_yaw_joint" kp="17.8460" kv="2.1302" forcelimited="true" forcerange="-38.3 38.3" />
+    <position name="left_knee_pitch_act" joint="left_knee_pitch_joint" kp="60.4020" kv="4.8066" forcelimited="true" forcerange="-112 112" />
+    <position name="left_ankle_pitch_act" joint="left_ankle_pitch_joint" kp="24.9844" kv="2.9823" forcelimited="true" forcerange="-38.3 38.3" />
+    <position name="left_ankle_roll_act" joint="left_ankle_roll_joint" kp="7.1384" kv="0.8521" forcelimited="true" forcerange="-38.3 38.3" />
+    <position name="right_hip_pitch_act" joint="right_hip_pitch_joint" kp="30.2010" kv="3.6050" forcelimited="true" forcerange="-68 68" />
+    <position name="right_hip_roll_act" joint="right_hip_roll_joint" kp="21.4480" kv="2.5602" forcelimited="true" forcerange="-43 43" />
+    <position name="right_hip_yaw_act" joint="right_hip_yaw_joint" kp="17.8460" kv="2.1302" forcelimited="true" forcerange="-38.3 38.3" />
+    <position name="right_knee_pitch_act" joint="right_knee_pitch_joint" kp="60.4020" kv="4.8066" forcelimited="true" forcerange="-112 112" />
+    <position name="right_ankle_pitch_act" joint="right_ankle_pitch_joint" kp="24.9844" kv="2.9823" forcelimited="true" forcerange="-38.3 38.3" />
+    <position name="right_ankle_roll_act" joint="right_ankle_roll_joint" kp="7.1384" kv="0.8521" forcelimited="true" forcerange="-38.3 38.3" />
+  </actuator>
+</mujoco>
