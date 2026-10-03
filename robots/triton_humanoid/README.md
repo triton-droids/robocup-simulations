@@ -12,7 +12,7 @@ integration").
 | `triton_humanoid.xml`          | The robot: bodies, joints, inertials, meshes, collision geoms. Root `<freejoint/>`. No actuators. |
 | `triton_humanoid_actuated.xml` | Includes the robot and adds 10 position actuators. **This is the file ProtoMotions loads.** ProtoMotions ignores the kp/kv/forcerange here and uses the gains declared in `robocup_rl/robots/triton_humanoid.py`; a test keeps the two equal. Its empty `<worldbody/>` is where ProtoMotions' MuJoCo loader injects its own floor. |
 | `scene.xml`                    | Includes the actuated robot and adds a floor plane and a light, for standalone MuJoCo only. ProtoMotions never loads it and supplies its own floor at z=0. |
-| `meshes/stl/`                  | All STL meshes, in millimetres (scaled by 0.001 in the MJCF). See inventory below.             |
+| `meshes/stl/`                  | The STL meshes the MJCF loads, in millimetres (scaled by 0.001 in the MJCF). See inventory below. |
 
 Load `scene.xml` for a standalone MuJoCo test. `triton_humanoid.xml` on its own has no
 actuators; ProtoMotions' MuJoCo backend needs one per joint, so it loads the actuated file.
@@ -73,18 +73,17 @@ From the export header, kept verbatim at the top of `triton_humanoid.xml`:
 
 ## Mesh inventory (`meshes/stl/`)
 
-39 files, about 109 MB. Only 22 are referenced by the MJCF (5.6 MB).
+22 files, 5.6 MB, all referenced by the MJCF.
 
-| Group                   | Files                                                                                     | Used by MJCF | Size              |
-| ----------------------- | ----------------------------------------------------------------------------------------- | ------------ | ----------------- |
-| Collision hulls         | `hip_ch.stl`, `{left,right}_leg{1,2,3,4}_ch.stl`                                          | yes          | 20–75 KB each     |
-| Decimated visuals       | `visual/hip_dumb2.stl`, `visual/{left,right}_leg{1,2,3,4}_dumb.stl`, `visual/{left,right}_foot.stl`, `visual/{left,right}_foot_sole.stl` | yes | ≤ 0.5 MB each |
-| Foot collision hulls    | `{left,right}_foot_ch.stl`                                                                | no (feet use boxes) | 16 KB each  |
-| High-resolution visuals | `visual/hip.stl`, `visual/{left,right}_leg{1,2,3,4}.stl`                                  | no (the `_dumb` versions are used) | 2.6–38.6 MB each, ~103 MB total |
-| Extras                  | `battery.stl`, `visual/battery_box.stl`, `visual/imu_mount.stl`, `visual/torso_weight.stl`, `visual/{left,right}_foot_dumb.stl` | no | ≤ 0.3 MB each |
+| Group                 | Files                                                                                                                                  | Size          |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| Collision hulls       | `hip_ch.stl`, `{left,right}_leg{1,2,3,4}_ch.stl`                                                                                       | 20–75 KB each |
+| Decimated visuals     | `visual/hip_dumb2.stl`, `visual/{left,right}_leg{1,2,3,4}_dumb.stl`, `visual/{left,right}_foot.stl`, `visual/{left,right}_foot_sole.stl` | ≤ 0.5 MB each |
 
-The high-resolution visuals are committed as plain git blobs (this repo does not use LFS).
-They are kept for rendering or re-decimation; drop them from the MJCF's perspective at will.
+The CAD export also produced ~103 MB of high-resolution visuals (`visual/hip.stl`,
+`visual/{left,right}_leg{1,2,3,4}.stl`) and a few unused extras (battery, IMU mount, foot
+hulls). They were removed from the tree because nothing loads them; git history still has
+them at commit `a531f54`, and the CAD model is the source to re-decimate from.
 
 ## Known gaps
 
@@ -101,7 +100,6 @@ They are kept for rendering or re-decimation; drop them from the MJCF's perspect
 - Validate the rigid-link grouping and CAD frames; consider rewriting in link-local frames.
 - Replace the placeholder torso inertial once the upper body is modelled.
 - Verify actuator torque limits and gains against the hardware.
-- Decide whether the ~103 MB of high-resolution meshes should stay in git.
 
 ## ProtoMotions integration
 
