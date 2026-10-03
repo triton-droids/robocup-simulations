@@ -33,12 +33,19 @@ Both are marked with `robocup-simulations` comments and are candidate upstream P
 | File | Change | Why |
 | --- | --- | --- |
 | `protomotions/robot_configs/factory.py` | `else` branch resolves unknown robot names through the `protomotions.robots` entry-point group | lets our robots live outside the subtree |
-| `protomotions/simulator/newton/simulator.py` | `_setup_sim` copies the `ControlInfo` effort limits into MuJoCo Warp's `actuator_forcerange` / `actuator_forcelimited` for `BUILT_IN_PD` | Newton 1.0's `SolverMuJoCo` creates the PD actuators without a force range, so on Newton the effort limits were silently ignored while the MuJoCo backend enforces them; unbounded PD torque drove triton_humanoid's joints thousands of radians past their limits and into a non-finite state |
+| `protomotions/simulator/newton/simulator.py` | `_setup_sim` copies the [`ControlInfo`](../third-party/protomotions/protomotions/components/pose_lib.py) effort limits into MuJoCo Warp's `actuator_forcerange` / `actuator_forcelimited` for `BUILT_IN_PD` | Newton 1.0's `SolverMuJoCo` creates the PD actuators without a force range, so on Newton the effort limits were silently ignored while the MuJoCo backend enforces them; unbounded PD torque drove triton_humanoid's joints thousands of radians past their limits and into a non-finite state |
 
 If a sync conflicts on either file, take upstream's version and re-apply the few lines
 (`git log -p` on the file shows them). `protomotions-train-agent` itself needs a GPU
-(`FabricConfig` hardcodes `accelerator="gpu"`); the MuJoCo env is for inspecting and
+([`FabricConfig`](../third-party/protomotions/protomotions/utils/fabric_config.py) hardcodes `accelerator="gpu"`); the MuJoCo env is for inspecting and
 evaluating, not training.
+
+Upstream's SLURM tooling is not used here. `protomotions/train_slurm.py` submits from a
+laptop over ssh and runs training in pyxis/enroot containers, and `--use-slurm` only adds a
+callback that saves and stops after a hardcoded 3.5 h (for chaining 4 h job arrays). Plain
+`sbatch` from the experiment directory is enough: rerunning with the same
+`--experiment-name` resumes from `results/<run>/last.ckpt` with the same W&B run id, so a
+preempted or requeued job continues on its own.
 
 ## Binary assets
 
@@ -97,7 +104,7 @@ outside the subtree instead and register the robot through a Python entry point:
 | Where                                                          | What                                                                                                   |
 | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | `robots/<robot>/`                                              | MJCF and meshes. ProtoMotions needs one actuator per joint and a `<worldbody>` in the file it loads.    |
-| `robocup_rl/robots/<robot>.py`                                 | `RobotConfig` subclass: absolute `asset_root`, body-name mapping, PD gains, default pose, sim params.   |
+| `robocup_rl/robots/<robot>.py`                                 | [`RobotConfig`](../third-party/protomotions/protomotions/robot_configs/base.py) subclass: absolute `asset_root`, body-name mapping, PD gains, default pose, sim params.   |
 | `pyproject.toml` (root)                                        | `[project.entry-points."protomotions.robots"] <robot> = "robocup_rl.robots.<robot>:<Config>"`.         |
 | `third-party/protomotions/protomotions/robot_configs/factory.py` | **Local subtree change (owners only):** the `else` branch calls `_robot_config_from_entry_point`, which looks the name up in that entry-point group. Nothing RoboCup-specific is in the file. |
 

@@ -29,7 +29,7 @@ declares our robots there:
 triton_humanoid = "robocup_rl.robots.triton_humanoid:TritonHumanoidConfig"
 ```
 
-The entry point is a zero-argument callable returning a `RobotConfig`; a dataclass subclass
+The entry point is a zero-argument callable returning a [`RobotConfig`](../third-party/protomotions/protomotions/robot_configs/base.py); a dataclass subclass
 with field defaults is exactly that. Entry points are written at install time, so after
 adding or renaming one run `uv sync` (or `uv pip install --no-deps -e .`) again, or the
 factory will report the robot as unknown.
@@ -56,9 +56,11 @@ An experiment file is plain Python loaded by path. ProtoMotions calls, in order:
 `configure_robot_and_simulator` (optional), `terrain_config`, `scene_lib_config`,
 `motion_lib_config`, `env_config`, `agent_config`, and at inference
 `apply_inference_overrides` with eight positional arguments. `experiments/steering/config.py`
-is the template: plain PPO, no motion data (`MotionLibConfig(motion_file=None)`), a fall
-termination and the steering reward. Import from `robocup_rl` and `protomotions` with
-absolute paths only; the loader executes the file under a throwaway module name.
+is the template: plain PPO, no motion data ([`MotionLibConfig(motion_file=None)`](../third-party/protomotions/protomotions/components/motion_lib.py)), a fall
+termination and the steering reward;
+[docs/tutorials/adding-an-experiment.md](../docs/tutorials/adding-an-experiment.md) walks
+through adding one. Import from `robocup_rl` and `protomotions` with absolute paths only; the
+loader executes the file under a throwaway module name.
 
 ProtoMotions writes everything (configs, checkpoints, TensorBoard) to
 `results/<experiment-name>` under the **current working directory**, with no flag to change

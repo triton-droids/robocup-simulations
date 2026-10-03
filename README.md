@@ -35,7 +35,9 @@ before torch is imported.
 ### Training
 
 Every experiment is one directory, `robocup_rl/experiments/<experiment>/`, holding a
-`config.py`. The command is the same for all of them; only `<experiment>` and `<run>` change:
+`config.py`; [docs/tutorials/adding-an-experiment.md](docs/tutorials/adding-an-experiment.md)
+walks through adding one. The command is the same for all of them; only `<experiment>` and
+`<run>` change:
 
 ```sh
 cd robocup_rl/experiments/<experiment>              # outputs go to this directory's results/<run>/
@@ -63,9 +65,6 @@ environment at the repo root**. Create the ones you need; activate one at a time
 | `.venv-newton`   | Newton    | 3.11   | NVIDIA GPU                 | GPU training without Isaac Sim            |
 | `.venv-isaaclab` | IsaacLab  | 3.12   | NVIDIA GPU, Linux x86_64   | large-scale training, Isaac Sim rendering |
 
-\* The MuJoCo and Newton extras pin `tensordict==0.9.0`, which ships macOS wheels only
-for macOS 15+. Isaac Sim has no macOS build at all. On older macOS, use a Linux box.
-
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/) once; it downloads
 the right Python for each environment.
 
@@ -92,13 +91,6 @@ protomotions info --json                 # smoke test: prints the asset root and
 
 If `uv sync` cannot resolve on your platform (older macOS, see above) but you have a working
 env anyway, `uv pip install --no-deps -e .` still installs `robocup_rl` and its entry points.
-
-- **After `git pull`:** `uv sync --active --extra mujoco` again. uv re-resolves if the
-  vendored `pyproject.toml` changed.
-- **Add a package:** `uv add <name>` (lands in the root `pyproject.toml` and `uv.lock`;
-  commit both). `uv add --optional mujoco <name>` for something only this env needs.
-- **Dev tools** (pytest, ONNX export): `uv sync --active --extra mujoco --extra dev`.
-- **Start over:** `rm -rf .venv-mujoco` and repeat the three lines above.
 
 ### Newton
 
@@ -142,10 +134,6 @@ Do not add upstream's `requirements_isaaclab.txt` on top; its floors override th
 - **After a ProtoMotions sync merge:** re-run step 2.
 - **Re-sync IsaacLab's own packages** (rare): `uv sync --active --inexact --project third-party/IsaacLab --extra isaacsim`.
 - **Do not move or delete `third-party/IsaacLab`** while the env exists; it is installed editable.
-- **Start over:** `rm -rf .venv-isaaclab` and repeat.
-- **Fallback:** if Isaac Sim misbehaves at runtime (for example torch shadowed by its bundled copy),
-  replace step 1 with `third-party/IsaacLab/isaaclab.sh -i isaacsim`, which does extra post-install
-  repairs (and may `sudo apt-get install cmake build-essential`). Steps 2 and 3 are unchanged.
 
 ### Which one am I in?
 

@@ -22,3 +22,12 @@ Read `README.md` for setup and `docs/protomotions.md` before touching `third-par
 One named env per simulator at the root (`.venv-mujoco`, `.venv-newton`, `.venv-isaaclab`).
 MuJoCo is for inspecting and evaluating on CPU only; training runs on Newton or IsaacLab on
 the GPU node.
+
+## Markdown
+
+- When prose names a class whose definition is in this tree (ours or a vendored subtree), link
+  the first mention in the file to the defining file with a relative path:
+  [`MdpComponent`](third-party/protomotions/protomotions/envs/mdp_component.py). Link the file
+  only, never a `#L<n>` line anchor; anchors go stale on the next edit. Later mentions in the
+  same file and names inside code blocks stay plain, as do classes from pip packages (Newton's
+  `SolverMuJoCo`), which have no file here.

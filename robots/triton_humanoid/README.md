@@ -105,7 +105,7 @@ They are kept for rendering or re-decimation; drop them from the MJCF's perspect
 
 ## ProtoMotions integration
 
-- **Config:** `robocup_rl/robots/triton_humanoid.py` (`TritonHumanoidConfig`). It points at
+- **Config:** `robocup_rl/robots/triton_humanoid.py` ([`TritonHumanoidConfig`](../../robocup_rl/robots/triton_humanoid.py)). It points at
   `triton_humanoid_actuated.xml` with an absolute `asset_root`, maps feet to `left_foot` /
   `right_foot`, torso and head to `torso`, and the mandatory hand keys to the hip-roll links
   (the robot has none; training never reads them), and declares the PD gains, ±40 Nm
