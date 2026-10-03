@@ -1,10 +1,12 @@
-"""IsaacLab smoke test for triton_humanoid. GPU only; run alone, in .venv-isaaclab:
+"""IsaacLab smoke test for one registered robot. GPU only; run alone, in .venv-isaaclab:
 
-    pytest -v tests/test_triton_humanoid_isaaclab.py
+    pytest -v tests/test_isaaclab.py                      # triton_humanoid
+    pytest -v tests/test_isaaclab.py --robot booster_k1
 
-It is a separate file, not a parameter of tests/test_triton_humanoid.py, because Isaac Sim's
+It is a separate file, not a parameter of the per-robot test modules, because Isaac Sim's
 AppLauncher has to start before torch is imported anywhere in the process and stays up for the
-rest of it. Running it together with the other test module would import torch first.
+rest of it, and closing the simulator shuts Kit down. So: one process, one robot, chosen with
+the --robot option (tests/conftest.py), resolved through the entry point like the CLI does.
 Isaac Sim converts the MJCF to USD on first use (cached under ~/.cache/protomotions/).
 
 Read the per-test PASSED/FAILED lines in the log: Kit shuts the process down at exit before
@@ -28,13 +30,13 @@ _app_launcher = AppLauncher({"headless": True, "device": "cuda:0"})
 
 import torch  # noqa: E402
 
-from robocup_rl.robots.triton_humanoid import TritonHumanoidConfig  # noqa: E402
+from protomotions.robot_configs.factory import robot_config  # noqa: E402
 
 NUM_ENVS = 4
 
 
 @pytest.fixture(scope="module")
-def simulator():
+def simulator(request):
     from protomotions.components.scene_lib import SceneLib
     from protomotions.components.terrains.config import TerrainConfig
     from protomotions.components.terrains.terrain import Terrain
@@ -42,7 +44,7 @@ def simulator():
     from protomotions.utils.hydra_replacement import get_class
 
     device = torch.device("cuda:0")
-    cfg = TritonHumanoidConfig()
+    cfg = robot_config(request.config.getoption("--robot"))
     sim_cfg = simulator_config(
         "isaaclab", cfg, headless=True, num_envs=NUM_ENVS, experiment_name="smoke"
     )

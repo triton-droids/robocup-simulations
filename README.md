@@ -1,6 +1,7 @@
 # robocup-simulations
 
-Simulation and policy training for the Triton Droids RoboCup humanoid, built on
+Simulation and policy training for Triton Droids' RoboCup humanoids (the team's own robot
+and the Booster K1), built on
 [NVIDIA ProtoMotions](https://github.com/NVlabs/ProtoMotions). ProtoMotions and the
 IsaacLab revision it is tested against are vendored as git subtrees under `third-party/`,
 so a clone of this repo is everything you need.
@@ -11,7 +12,7 @@ Before touching anything under `third-party/`, read [docs/protomotions.md](docs/
 
 | Path                      | What                                                                                              |
 | ------------------------- | ------------------------------------------------------------------------------------------------- |
-| `robots/<robot>/`         | Robot descriptions (MJCF, meshes). See `robots/triton_humanoid/README.md`.                        |
+| `robots/<robot>/`         | Robot descriptions (MJCF, meshes). See `robots/triton_humanoid/README.md` and `robots/booster_k1/README.md`. |
 | `robocup_rl/`             | Our package: robot configs and one directory per experiment, each holding its own `results/`. Installed editable by `uv sync`; registers robots with ProtoMotions via entry points. |
 | `tests/`                  | `pytest` smoke tests (needs the `dev` extra).                                                     |
 | `third-party/`            | Vendored ProtoMotions and IsaacLab subtrees. Owner approval needed for edits.                      |
@@ -26,7 +27,7 @@ With an environment active (see below).
 pytest                                                   # whole suite; Newton cases skip without a GPU
 pytest tests/test_triton_humanoid.py::test_kinematics    # one test
 pytest -k newton -v                                      # by keyword, here the Newton cases (GPU)
-pytest tests/test_triton_humanoid_isaaclab.py            # IsaacLab (GPU); runs alone, in its own process
+pytest tests/test_isaaclab.py --robot booster_k1         # IsaacLab (GPU); runs alone, one robot per process
 ```
 
 Tests need the `dev` extra. The IsaacLab file stays separate because Isaac Sim must start
@@ -47,6 +48,7 @@ protomotions-train-agent --robot-name triton_humanoid --simulator newton \
   --training-max-iterations 1000 --use-wandb --wandb-project robocup-triton-humanoid
 ```
 
+- `--robot-name` is any registered robot: `triton_humanoid` or `booster_k1`.
 - Train on Newton or IsaacLab (GPU). The MuJoCo env is for inspecting and evaluating only.
 - Re-running with the same `--experiment-name` resumes from `results/<run>/last.ckpt`.
 - `--batch-size` must divide `--num-envs` × 32. `--motion-file none` is required by the CLI for

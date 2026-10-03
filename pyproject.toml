@@ -23,6 +23,7 @@ dev = ["protomotions[dev]"]
 # Re-run `uv sync` after adding one; entry points are written at install time.
 [project.entry-points."protomotions.robots"]
 triton_humanoid = "robocup_rl.robots.triton_humanoid:TritonHumanoidConfig"
+booster_k1 = "robocup_rl.robots.booster_k1:BoosterK1Config"
 
 [tool.setuptools.packages.find]
 include = ["robocup_rl*"] # never collect robots/, docs/, third-party/

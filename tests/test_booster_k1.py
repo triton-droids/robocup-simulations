@@ -1,10 +1,8 @@
-"""Smoke tests for the triton_humanoid ProtoMotions integration.
+"""Smoke tests for the booster_k1 ProtoMotions integration.
 
-The config and kinematics tests are CPU-only and run in .venv-mujoco. The simulator tests are
-parametrized over the backends: the mujoco case runs on CPU anywhere, the newton case needs
-the `newton` extra and a CUDA device (run `pytest -v tests/` on a GPU machine) and skips
-otherwise. The `backend` fixture and `build_simulator` live in conftest.py. IsaacLab has its own
-file (tests/test_isaaclab.py) because it must start Isaac Sim before torch is imported.
+Same shape as tests/test_triton_humanoid.py: config and kinematics on CPU, the simulator
+tests parametrized over mujoco (CPU) and newton (GPU, skips otherwise) through the fixtures
+in conftest.py. IsaacLab: `pytest tests/test_isaaclab.py --robot booster_k1`.
 """
 
 import argparse
@@ -17,47 +15,78 @@ mujoco = pytest.importorskip("mujoco")
 from protomotions.robot_configs.factory import robot_config  # noqa: E402
 
 from robocup_rl.paths import ROBOTS_DIR  # noqa: E402
-from robocup_rl.robots.triton_humanoid import TritonHumanoidConfig  # noqa: E402
+from robocup_rl.robots.booster_k1 import BoosterK1Config, pd_gains  # noqa: E402
 
 from conftest import Backend, build_simulator  # noqa: E402
 
-JOINTS = [
-    f"{side}_{joint}_joint"
-    for side in ("left", "right")
-    for joint in ("hip1", "hip2", "thigh", "knee", "ankle")
-]
+# Depth-first order of the MJCF: head, left arm, right arm, left leg, right leg. The `aa`
+# prefixes are upstream's.
+JOINTS = (
+    ["aahead_yaw_joint", "aahead_pitch_joint"]
+    + [
+        f"{p}{side}_{joint}_joint"
+        for side in ("left", "right")
+        for p, joint in (
+            ("aa", "shoulder_pitch"),
+            ("", "shoulder_roll"),
+            ("", "elbow_pitch"),
+            ("", "elbow_yaw"),
+        )
+    ]
+    + [
+        f"{side}_{joint}_joint"
+        for side in ("left", "right")
+        for joint in ("hip_pitch", "hip_roll", "hip_yaw", "knee_pitch", "ankle_pitch", "ankle_roll")
+    ]
+)
+FEET = ["left_ankle_roll_link", "right_ankle_roll_link"]
 
 
 def test_entry_point_resolves_through_upstream_factory():
-    assert isinstance(robot_config("triton_humanoid"), TritonHumanoidConfig)
-    with pytest.raises(ValueError, match="triton_humanoid"):
-        robot_config("no_such_robot")
+    assert isinstance(robot_config("booster_k1"), BoosterK1Config)
 
 
 def test_kinematics():
-    cfg = TritonHumanoidConfig()
-    assert cfg.kinematic_info.num_dofs == 10
-    assert cfg.number_of_actions == 10
-    assert cfg.kinematic_info.num_bodies == 13
+    cfg = BoosterK1Config()
+    assert cfg.kinematic_info.num_dofs == 22
+    assert cfg.number_of_actions == 22
+    assert cfg.kinematic_info.num_bodies == 23
     assert cfg.kinematic_info.dof_names == JOINTS
     # All bodies get contact sensors; only the feet may touch the ground without terminating.
     assert cfg.contact_bodies == cfg.kinematic_info.body_names
-    assert cfg.non_termination_contact_bodies == ["left_foot", "right_foot"]
+    assert cfg.non_termination_contact_bodies == FEET
+    assert set(FEET) <= set(cfg.kinematic_info.body_names)
     assert cfg.anchor_body_name in cfg.kinematic_info.body_names
+    # Arms down at the sides, everything else at zero.
+    default = dict(zip(JOINTS, cfg.default_dof_pos.tolist()))
+    assert default.pop("left_shoulder_roll_joint") == pytest.approx(-1.3)
+    assert default.pop("right_shoulder_roll_joint") == pytest.approx(1.3)
+    assert all(v == 0.0 for v in default.values())
+
+
+def test_every_joint_has_control_info():
+    """A regex that misses the `aa`-prefixed joints would leave them without gains."""
+    cfg = BoosterK1Config()
+    for joint in JOINTS:
+        info = cfg.control.control_info[joint]
+        assert info.stiffness > 0 and info.damping > 0 and info.effort_limit > 0, joint
+        assert info.velocity_limit > 0 and info.armature > 0, joint
+    # Spot-check the derivation against Booster's published ankle numbers (24.98 / 7.14 Nm/rad).
+    assert pd_gains(1.4 * 0.0282528, 4.0, 1.5)[0] == pytest.approx(24.98, abs=0.01)
+    assert pd_gains(0.4 * 0.0282528, 4.0, 1.5)[0] == pytest.approx(7.14, abs=0.01)
 
 
 def test_gains_match_actuated_xml():
-    """The xml's kp/kv/forcerange are ignored by ProtoMotions; keep them equal to the config."""
-    cfg = TritonHumanoidConfig()
-    model = mujoco.MjModel.from_xml_path(
-        str(ROBOTS_DIR / "triton_humanoid" / "triton_humanoid_actuated.xml")
-    )
+    """The xml's kp/kv/forcerange are ignored by ProtoMotions; keep them equal to the config.
+    The xml carries four decimals, hence the tolerance."""
+    cfg = BoosterK1Config()
+    model = mujoco.MjModel.from_xml_path(str(ROBOTS_DIR / "booster_k1" / "booster_k1_actuated.xml"))
     assert model.nu == len(JOINTS)
     for i in range(model.nu):
         joint = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, model.actuator_trnid[i, 0])
         info = cfg.control.control_info[joint]
-        assert model.actuator_gainprm[i, 0] == pytest.approx(info.stiffness), joint
-        assert -model.actuator_biasprm[i, 2] == pytest.approx(info.damping), joint
+        assert model.actuator_gainprm[i, 0] == pytest.approx(info.stiffness, rel=1e-3), joint
+        assert -model.actuator_biasprm[i, 2] == pytest.approx(info.damping, rel=1e-3), joint
         assert model.actuator_forcerange[i, 1] == pytest.approx(info.effort_limit), joint
 
 
@@ -65,7 +94,7 @@ def test_gains_match_actuated_xml():
 
 
 def test_simulator_steps_without_falling_through_the_floor(backend: Backend):
-    cfg = TritonHumanoidConfig()
+    cfg = BoosterK1Config()
     sim, _, _ = build_simulator(backend, cfg)
     try:
         sim._initialize_with_markers({})
@@ -86,8 +115,8 @@ def test_simulator_steps_without_falling_through_the_floor(backend: Backend):
 
 
 def _check_newton_dof_mapping(sim, cfg):
-    """Newton matches our DOF names to the MJCF joints by substring, then assumes the builder's
-    DOF order equals ours. Check both the resolved mapping and the gains it wrote per DOF."""
+    """Newton matches our DOF names to the MJCF joints, then assumes the builder's DOF order
+    equals ours. Check both the resolved mapping and the gains it wrote per DOF."""
     assert list(sim._newton_dof_names) == JOINTS
     assert list(sim.robot_view.joint_names) == JOINTS
     # Builder DOFs 0-5 are the free joint; 6.. are ours, in order.
@@ -110,13 +139,12 @@ def test_steering_experiment_env_steps(backend: Backend):
 
     n, device = backend.num_envs, backend.device
     args = argparse.Namespace(batch_size=32, training_max_steps=64)
-    cfg = TritonHumanoidConfig()
+    cfg = BoosterK1Config()
     terrain = Terrain(config=steering.terrain_config(args), num_envs=n, device=device)
     scene_lib = SceneLib(
         config=steering.scene_lib_config(args), num_envs=n, device=device, terrain=terrain
     )
     motion_lib = MotionLib.empty(device=device)
-    assert steering.motion_lib_config(args).motion_file is None
     simulator, _, _ = build_simulator(backend, cfg, terrain=terrain, scene_lib=scene_lib)
     env = BaseEnv(
         config=steering.env_config(cfg, args),
@@ -140,10 +168,10 @@ def test_steering_experiment_env_steps(backend: Backend):
         agent_cfg = steering.agent_config(cfg, env.config, args)
         assert agent_cfg.model.actor.num_out == cfg.number_of_actions
 
-        # Zero actions target the middle of every joint range (knees at -1.05 rad), which folds
-        # the robot onto the ground within ~40 control steps. Fall termination must notice:
-        # it needs contact flags on non-foot bodies, which the GPU backends only provide for
-        # bodies in robot_cfg.contact_bodies.
+        # Zero actions target the middle of every joint range (knees at 1.16 rad, hips pitched
+        # back), which folds the robot onto the ground. Fall termination must notice: it needs
+        # contact flags on non-foot bodies, which the GPU backends only provide for bodies in
+        # robot_cfg.contact_bodies.
         fell = torch.zeros(n, dtype=torch.bool, device=device)
         for _ in range(150):
             _, _, _, terminated, _ = env.step(torch.zeros(n, cfg.number_of_actions, device=device))

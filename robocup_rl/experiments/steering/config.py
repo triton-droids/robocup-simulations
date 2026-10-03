@@ -2,8 +2,10 @@
 
 The robot walks toward a target direction at a target speed; both are re-sampled
 periodically by ProtoMotions' steering control component. No reference motions and no
-discriminator are involved, so this is the first thing that runs on triton_humanoid
-before any retargeted data exists. Expect clumsy gaits: nothing here rewards style.
+discriminator are involved, so this is the first thing that runs on a robot before any
+retargeted data exists. Robot-agnostic: everything comes from robot_cfg, so --robot-name
+may be any registered robot (triton_humanoid, booster_k1). Expect clumsy gaits: nothing
+here rewards style.
 
 Run from this directory so results/<run> lands next to this file (ProtoMotions writes to
 results/<experiment-name> under the current working directory). Train on Newton (GPU);
