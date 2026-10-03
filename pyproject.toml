@@ -35,6 +35,10 @@ testpaths = ["tests"] # bare `pytest` never reaches the subtree's LFS-dependent 
 # startup. Neither IsaacLab's core package nor ProtoMotions imports hydra, so just keep the plugin out.
 addopts = "-p no:hydra_pytest"
 
+[tool.ruff]
+extend-exclude = ["third-party"] # vendored subtrees are never linted or formatted here
+line-length = 100
+
 [tool.uv]
 # Mirrors upstream's [tool.uv] conflicts; the simulator extras pin incompatible torch/wandb versions.
 conflicts = [

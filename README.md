@@ -32,6 +32,8 @@ pytest tests/test_isaaclab.py --robot booster_k1         # IsaacLab (GPU); runs 
 
 Tests need the `dev` extra. The IsaacLab file stays separate because Isaac Sim must start
 before torch is imported.
+CI (`.github/workflows/ci.yml`) runs ruff and this suite in the MuJoCo env on every PR; the
+GPU cases stay manual.
 
 ### Training
 
