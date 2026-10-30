@@ -1,0 +1,7 @@
+# Same settings as td_perception (where these packages may end up), not the robocup-simulations root config:
+# ruff uses the nearest config file, so this one applies to everything under localization/.
+line-length = 110
+target-version = "py310"
+
+[lint]
+select = ["E", "F", "I", "B", "UP"]

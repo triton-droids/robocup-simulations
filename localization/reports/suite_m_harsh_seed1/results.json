@@ -1,0 +1,383 @@
+{
+  "tracking": {
+    "metrics": {
+      "samples": 1201,
+      "accuracy_within_threshold": 1.0,
+      "availability": 1.0,
+      "pos_p50_m": 0.15247057266610714,
+      "pos_p95_m": 0.20295477768880935,
+      "pos_max_m": 0.24043995157386563,
+      "pos_rmse_m": 0.15199734427737452,
+      "heading_p50_deg": 0.5043643065934089,
+      "heading_p95_deg": 1.9706871563186952,
+      "wrong_half_fraction": 0.0,
+      "wrong_half_episodes": 0,
+      "wrong_half_longest_s": 0.0,
+      "confidently_wrong_samples": 0,
+      "side_confidence_mean_when_right": 0.9975273768433655,
+      "side_confidence_mean_when_wrong": null,
+      "latency_p50_ms": 1.0617000000365806,
+      "latency_p95_ms": 14.02460000008432,
+      "alignment_offset_max_s": 0.0,
+      "tolerance_s": 0.05,
+      "pos_threshold_m": 0.5,
+      "heading_threshold_deg": 5.0
+    },
+    "events": [
+      {
+        "t": 0.0,
+        "event": "initial",
+        "converge_s": 0.0
+      }
+    ],
+    "checks": {
+      "pos p50 ≤ 0.2 m": true,
+      "pos p95 ≤ 0.5 m": true,
+      "heading p95 ≤ 5.0°": true,
+      "no wrong-half samples": true,
+      "every event converges ≤ 10.0 s": true
+    }
+  },
+  "global_sideline": {
+    "metrics": {
+      "samples": 601,
+      "accuracy_within_threshold": 0.9467554076539102,
+      "availability": 0.9467554076539102,
+      "pos_p50_m": 0.222278224803626,
+      "pos_p95_m": 0.3272700637724125,
+      "pos_max_m": 0.35058256312855735,
+      "pos_rmse_m": 0.23244256402799862,
+      "heading_p50_deg": 1.953181385400089,
+      "heading_p95_deg": 3.999760049664311,
+      "wrong_half_fraction": 0.0,
+      "wrong_half_episodes": 0,
+      "wrong_half_longest_s": 0.0,
+      "confidently_wrong_samples": 0,
+      "side_confidence_mean_when_right": 0.9936362446699267,
+      "side_confidence_mean_when_wrong": null,
+      "latency_p50_ms": 8.176399999911155,
+      "latency_p95_ms": 14.30242000014914,
+      "alignment_offset_max_s": 0.0,
+      "tolerance_s": 0.05,
+      "pos_threshold_m": 0.5,
+      "heading_threshold_deg": 5.0
+    },
+    "events": [
+      {
+        "t": 0.0,
+        "event": "initial",
+        "converge_s": 2.999999999999999
+      }
+    ],
+    "checks": {
+      "pos p50 ≤ 0.2 m": false,
+      "pos p95 ≤ 0.5 m": true,
+      "heading p95 ≤ 5.0°": true,
+      "no wrong-half samples": true,
+      "every event converges ≤ 10.0 s": true
+    }
+  },
+  "penalty_reentry": {
+    "metrics": {
+      "samples": 541,
+      "accuracy_within_threshold": 1.0,
+      "availability": 1.0,
+      "pos_p50_m": 0.13832671594337104,
+      "pos_p95_m": 0.18651155574799141,
+      "pos_max_m": 0.20070688626213065,
+      "pos_rmse_m": 0.14174411419317506,
+      "heading_p50_deg": 1.16544866257375,
+      "heading_p95_deg": 3.1748448978724246,
+      "wrong_half_fraction": 0.0,
+      "wrong_half_episodes": 0,
+      "wrong_half_longest_s": 0.0,
+      "confidently_wrong_samples": 0,
+      "side_confidence_mean_when_right": 0.9975273768433652,
+      "side_confidence_mean_when_wrong": null,
+      "latency_p50_ms": 1.0644999999840365,
+      "latency_p95_ms": 12.891600000102699,
+      "alignment_offset_max_s": 0.0,
+      "tolerance_s": 0.05,
+      "pos_threshold_m": 0.5,
+      "heading_threshold_deg": 5.0
+    },
+    "events": [
+      {
+        "t": 0.0,
+        "event": "initial",
+        "converge_s": 0.0
+      }
+    ],
+    "checks": {
+      "pos p50 ≤ 0.2 m": true,
+      "pos p95 ≤ 0.5 m": true,
+      "heading p95 ≤ 5.0°": true,
+      "no wrong-half samples": true,
+      "every event converges ≤ 10.0 s": true
+    }
+  },
+  "falls": {
+    "metrics": {
+      "samples": 1203,
+      "accuracy_within_threshold": 0.9883624272651704,
+      "availability": 1.0,
+      "pos_p50_m": 0.1909270673046181,
+      "pos_p95_m": 0.29348496925277273,
+      "pos_max_m": 0.4590762487611366,
+      "pos_rmse_m": 0.20169424495555593,
+      "heading_p50_deg": 0.830564426002581,
+      "heading_p95_deg": 2.9000058770844483,
+      "wrong_half_fraction": 0.0,
+      "wrong_half_episodes": 0,
+      "wrong_half_longest_s": 0.0,
+      "confidently_wrong_samples": 0,
+      "side_confidence_mean_when_right": 0.9975273768433655,
+      "side_confidence_mean_when_wrong": null,
+      "latency_p50_ms": 7.464799999979732,
+      "latency_p95_ms": 12.832539999999423,
+      "alignment_offset_max_s": 0.0,
+      "tolerance_s": 0.05,
+      "pos_threshold_m": 0.5,
+      "heading_threshold_deg": 5.0
+    },
+    "events": [
+      {
+        "t": 0.0,
+        "event": "initial",
+        "converge_s": 0.0
+      },
+      {
+        "t": 15.03333333333329,
+        "event": "fall",
+        "converge_s": 1.966666666666713
+      },
+      {
+        "t": 30.06666666666732,
+        "event": "fall",
+        "converge_s": 0.0
+      }
+    ],
+    "checks": {
+      "pos p50 ≤ 0.2 m": true,
+      "pos p95 ≤ 0.5 m": true,
+      "heading p95 ≤ 5.0°": true,
+      "no wrong-half samples": true,
+      "every event converges ≤ 10.0 s": true
+    }
+  },
+  "kidnap_same_half": {
+    "metrics": {
+      "samples": 752,
+      "accuracy_within_threshold": 0.7167553191489362,
+      "availability": 1.0,
+      "pos_p50_m": 0.21125033278515262,
+      "pos_p95_m": 1.3255620700753084,
+      "pos_max_m": 1.4602063011353794,
+      "pos_rmse_m": 0.5301532177598866,
+      "heading_p50_deg": 1.6612835460669095,
+      "heading_p95_deg": 34.26856552402561,
+      "wrong_half_fraction": 0.0,
+      "wrong_half_episodes": 0,
+      "wrong_half_longest_s": 0.0,
+      "confidently_wrong_samples": 0,
+      "side_confidence_mean_when_right": 0.9972498682202408,
+      "side_confidence_mean_when_wrong": null,
+      "latency_p50_ms": 1.0425000000395812,
+      "latency_p95_ms": 13.033750000010969,
+      "alignment_offset_max_s": 0.0,
+      "tolerance_s": 0.05,
+      "pos_threshold_m": 0.5,
+      "heading_threshold_deg": 5.0
+    },
+    "events": [
+      {
+        "t": 0.0,
+        "event": "initial",
+        "converge_s": 0.0
+      },
+      {
+        "t": 10.033333333333308,
+        "event": "kidnap",
+        "converge_s": 7.100000000000035
+      }
+    ],
+    "checks": {
+      "pos p50 ≤ 0.2 m": false,
+      "pos p95 ≤ 0.5 m": false,
+      "heading p95 ≤ 5.0°": false,
+      "no wrong-half samples": true,
+      "every event converges ≤ 10.0 s": true
+    }
+  },
+  "kidnap_cross_team": {
+    "metrics": {
+      "samples": 902,
+      "accuracy_within_threshold": 0.9434589800443459,
+      "availability": 1.0,
+      "pos_p50_m": 0.1815402714609623,
+      "pos_p95_m": 5.949657742096455,
+      "pos_max_m": 7.351847332404272,
+      "pos_rmse_m": 1.6284596190979357,
+      "heading_p50_deg": 0.9864163082485731,
+      "heading_p95_deg": 168.63129419390287,
+      "wrong_half_fraction": 0.0565410199556541,
+      "wrong_half_episodes": 1,
+      "wrong_half_longest_s": 1.6666666666666607,
+      "confidently_wrong_samples": 8,
+      "side_confidence_mean_when_right": 0.9995401171098447,
+      "side_confidence_mean_when_wrong": 0.25393507900780615,
+      "latency_p50_ms": 1.263500000050044,
+      "latency_p95_ms": 15.198209999959994,
+      "alignment_offset_max_s": 0.0,
+      "tolerance_s": 0.05,
+      "pos_threshold_m": 0.5,
+      "heading_threshold_deg": 5.0
+    },
+    "events": [
+      {
+        "t": 0.0,
+        "event": "initial",
+        "converge_s": 0.0
+      },
+      {
+        "t": 10.033333333333308,
+        "event": "kidnap",
+        "converge_s": 3.4999999999999876
+      }
+    ],
+    "checks": {
+      "pos p50 ≤ 0.2 m": true,
+      "pos p95 ≤ 0.5 m": false,
+      "heading p95 ≤ 5.0°": false,
+      "no wrong-half samples": false,
+      "every event converges ≤ 10.0 s": true
+    }
+  },
+  "kidnap_cross_alone": {
+    "metrics": {
+      "samples": 902,
+      "accuracy_within_threshold": 0.33370288248337027,
+      "availability": 1.0,
+      "pos_p50_m": 2.7437392124716933,
+      "pos_p95_m": 8.187729217745794,
+      "pos_max_m": 8.27783757538444,
+      "pos_rmse_m": 4.655983432334521,
+      "heading_p50_deg": 178.0559232461731,
+      "heading_p95_deg": 179.8835711536923,
+      "wrong_half_fraction": 0.6662971175166297,
+      "wrong_half_episodes": 1,
+      "wrong_half_longest_s": 20.000000000000675,
+      "confidently_wrong_samples": 601,
+      "side_confidence_mean_when_right": 0.9975273768433652,
+      "side_confidence_mean_when_wrong": 0.9975273768433656,
+      "latency_p50_ms": 1.1962000000949047,
+      "latency_p95_ms": 12.960979999979827,
+      "alignment_offset_max_s": 0.0,
+      "tolerance_s": 0.05,
+      "pos_threshold_m": 0.5,
+      "heading_threshold_deg": 5.0
+    },
+    "events": [
+      {
+        "t": 0.0,
+        "event": "initial",
+        "converge_s": 0.0
+      },
+      {
+        "t": 10.033333333333308,
+        "event": "kidnap",
+        "converge_s": null
+      }
+    ],
+    "checks": {
+      "pos p50 ≤ 0.2 m": false,
+      "pos p95 ≤ 0.5 m": false,
+      "heading p95 ≤ 5.0°": false,
+      "no wrong-half samples": false,
+      "every event converges ≤ 10.0 s": false
+    }
+  },
+  "team_kidnap_cross_kidnapped_p3": {
+    "metrics": {
+      "samples": 901,
+      "accuracy_within_threshold": 0.6881243063263041,
+      "availability": 1.0,
+      "pos_p50_m": 0.1746465760631764,
+      "pos_p95_m": 6.368760765431471,
+      "pos_max_m": 7.260835680399078,
+      "pos_rmse_m": 2.971265615285459,
+      "heading_p50_deg": 1.3768833559518483,
+      "heading_p95_deg": 179.91934276926446,
+      "wrong_half_fraction": 0.3118756936736959,
+      "wrong_half_episodes": 1,
+      "wrong_half_longest_s": 9.33333333333348,
+      "confidently_wrong_samples": 250,
+      "side_confidence_mean_when_right": 0.9983991809178917,
+      "side_confidence_mean_when_wrong": 0.8873568925795904,
+      "latency_p50_ms": null,
+      "latency_p95_ms": null,
+      "alignment_offset_max_s": 0.0,
+      "tolerance_s": 0.05,
+      "pos_threshold_m": 0.5,
+      "heading_threshold_deg": 5.0
+    },
+    "events": [
+      {
+        "t": 0.0,
+        "event": "initial",
+        "converge_s": 0.0
+      },
+      {
+        "t": 10.033333333333308,
+        "event": "kidnap",
+        "converge_s": 9.366666666666815
+      }
+    ],
+    "checks": {
+      "pos p50 ≤ 0.2 m": true,
+      "pos p95 ≤ 0.5 m": false,
+      "heading p95 ≤ 5.0°": false,
+      "no wrong-half samples": false,
+      "every event converges ≤ 10.0 s": true
+    }
+  },
+  "team_kidnap_cross_teammate_p2": {
+    "metrics": {
+      "samples": 901,
+      "accuracy_within_threshold": 1.0,
+      "availability": 1.0,
+      "pos_p50_m": 0.15248031086616054,
+      "pos_p95_m": 0.21059141904084266,
+      "pos_max_m": 0.23229548789601664,
+      "pos_rmse_m": 0.15572331670967338,
+      "heading_p50_deg": 0.8291888366462903,
+      "heading_p95_deg": 3.148302514105799,
+      "wrong_half_fraction": 0.0,
+      "wrong_half_episodes": 0,
+      "wrong_half_longest_s": 0.0,
+      "confidently_wrong_samples": 0,
+      "side_confidence_mean_when_right": 0.9996575335331532,
+      "side_confidence_mean_when_wrong": null,
+      "latency_p50_ms": null,
+      "latency_p95_ms": null,
+      "alignment_offset_max_s": 0.0,
+      "tolerance_s": 0.05,
+      "pos_threshold_m": 0.5,
+      "heading_threshold_deg": 5.0
+    },
+    "events": [
+      {
+        "t": 0.0,
+        "event": "initial",
+        "converge_s": 0.0
+      }
+    ],
+    "checks": {
+      "pos p50 ≤ 0.2 m": true,
+      "pos p95 ≤ 0.5 m": true,
+      "heading p95 ≤ 5.0°": true,
+      "no wrong-half samples": true,
+      "every event converges ≤ 10.0 s": true
+    }
+  }
+}

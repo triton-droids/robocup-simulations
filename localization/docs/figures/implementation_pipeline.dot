@@ -1,0 +1,103 @@
+// Localization implementation pipeline: tickets, stages and dependencies.
+// Companion to docs/implementation_plan.md (§2, §6). Keep the two in sync.
+// Render: dot -Tsvg implementation_pipeline.dot -o implementation_pipeline.svg
+digraph implementation_pipeline {
+  graph [rankdir=LR, splines=spline, nodesep=0.3, ranksep=0.75, pad=0.4,
+         fontname="Helvetica", fontsize=14, bgcolor="white",
+         label=<<b>Localization implementation pipeline</b><br/><font point-size="11">Blue = agent-ready · Orange = needs hardware · Yellow = needs a human decision · Red arrows = critical path</font>>,
+         labelloc=t, labeljust=l];
+  node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=11, penwidth=1.4, margin="0.14,0.08"];
+  edge  [fontname="Helvetica", fontsize=9, color="#6b7280", penwidth=1.2, arrowsize=0.75];
+
+  // label styles
+  // agent-ready
+  node [fillcolor="#dbeafe", color="#2563eb"];
+
+  subgraph cluster_a {
+    label=<<b>A. Offline core</b><br/><font point-size="10">start now, no hardware</font>>; style="rounded,filled"; fillcolor="#f8fafc"; color="#94a3b8";
+    loc03 [label=<<b>LOC-03</b><br/>Field model<br/>(HSL JSON, likelihood field)>];
+    loc04 [label=<<b>LOC-04</b><br/>Synthetic simulator>];
+    loc05 [label=<<b>LOC-05</b><br/>Particle filter core>];
+    loc06 [label=<<b>LOC-06</b><br/>Side belief>];
+    loc07 [label=<<b>LOC-07</b><br/>Evaluation tool>];
+    loc08 [label=<<b>LOC-08</b><br/>GameController client<br/>+ team packing>];
+    loc18 [label=<<b>LOC-18</b><br/>Feature projection<br/>(reuses P-31)>];
+  }
+
+  subgraph cluster_b {
+    label=<<b>B. Decisions and hardware prep</b>>; style="rounded,filled"; fillcolor="#f8fafc"; color="#94a3b8";
+    loc01 [label=<<b>LOC-01</b><br/>Rules / IR policy<br/>TC confirmation>, fillcolor="#fef9c3", color="#ca8a04"];
+    loc02 [label=<<b>LOC-02</b><br/>Interfaces + td_msgs<br/>(owner approval)>, fillcolor="#fef9c3", color="#ca8a04"];
+    model [label=<<b>Model source</b><br/>MJCF vs URDF>, fillcolor="#fef9c3", color="#ca8a04"];
+    loc10 [label=<<b>LOC-10</b><br/>Head encoders<br/>+ firmware>, fillcolor="#ffedd5", color="#ea580c"];
+    loc13 [label=<<b>LOC-13</b><br/>USB 3 link<br/>+ camera config>, fillcolor="#ffedd5", color="#ea580c"];
+  }
+
+  subgraph cluster_c {
+    label=<<b>C. Data</b>>; style="rounded,filled"; fillcolor="#f8fafc"; color="#94a3b8";
+    loc14 [label=<<b>LOC-14</b><br/>Field data campaign<br/>bags + ground truth>, fillcolor="#ffedd5", color="#ea580c"];
+  }
+
+  subgraph cluster_d {
+    label=<<b>D. Sensor-dependent modules</b>>; style="rounded,filled"; fillcolor="#f8fafc"; color="#94a3b8";
+    loc09 [label=<<b>LOC-09</b><br/>Head joint filter>];
+    loc15 [label=<<b>LOC-15</b><br/>Leg odometry<br/>(MuJoCo first)>];
+    loc11 [label=<<b>LOC-11</b><br/>EKF + fall/slip gating>];
+    loc16 [label=<<b>LOC-16</b><br/>Floor-plane fit>];
+    loc17 [label=<<b>LOC-17</b><br/>Field feature detection>, fillcolor="#ffedd5", color="#ea580c"];
+    loc19 [label=<<b>LOC-19</b><br/>cuVSLAM VO eval<br/>(optional)>, fillcolor="#ffedd5", color="#ea580c", style="rounded,filled,dashed"];
+  }
+
+  subgraph cluster_e {
+    label=<<b>E. Integration and validation</b>>; style="rounded,filled"; fillcolor="#f8fafc"; color="#94a3b8";
+    loc20 [label=<<b>LOC-20</b><br/>Localization node<br/>+ launch>, penwidth=2.2];
+    loc21 [label=<<b>LOC-21</b><br/>Team communication>];
+    loc22 [label=<<b>LOC-22</b><br/>On-robot validation>, fillcolor="#ffedd5", color="#ea580c", penwidth=2.2];
+    loc23 [label=<<b>LOC-23</b><br/>Behavior integration>, fillcolor="#fef9c3", color="#ca8a04"];
+    loc24 [label=<<b>LOC-24</b><br/>Shared geometry module<br/>(after ball v1)>, fillcolor="#fef9c3", color="#ca8a04", style="rounded,filled,dashed"];
+  }
+
+  // Stage A
+  loc03 -> loc04;
+  loc03 -> loc05;
+  loc04 -> loc05;
+  loc04 -> loc06;
+  loc05 -> loc06;
+  loc04 -> loc07;
+  loc03 -> loc18;
+
+  // Stage B -> D
+  loc10 -> loc09;
+  model -> loc15;
+  loc15 -> loc11;
+  loc13 -> loc16;
+  loc09 -> loc19 [style=dashed];
+  loc11 -> loc19 [style=dashed];
+  loc13 -> loc19 [style=dashed];
+  loc19 -> loc11 [style=dashed, label="if kept", constraint=false];
+
+  // critical path
+  loc13 -> loc14 [color="#dc2626", penwidth=2.4];
+  loc10 -> loc14 [color="#dc2626", penwidth=2.4];
+  loc14 -> loc17 [color="#dc2626", penwidth=2.4];
+  loc16 -> loc17;
+  loc17 -> loc20 [color="#dc2626", penwidth=2.4];
+  loc20 -> loc22 [color="#dc2626", penwidth=2.4];
+
+  // integration inputs
+  loc02 -> loc20;
+  loc05 -> loc20;
+  loc06 -> loc20;
+  loc08 -> loc20;
+  loc11 -> loc20;
+  loc18 -> loc20;
+  loc07 -> loc20 [style=dashed, label="scores"];
+  loc08 -> loc21;
+  loc06 -> loc21;
+  loc09 -> loc22;
+  loc11 -> loc22;
+  loc20 -> loc23;
+  loc21 -> loc22 [style=dashed];
+  loc01 -> loc13 [style=dashed, label="policy"];
+  loc20 -> loc24 [style=dashed, constraint=false];
+}

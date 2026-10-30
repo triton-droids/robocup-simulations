@@ -1,0 +1,383 @@
+{
+  "tracking": {
+    "metrics": {
+      "samples": 1201,
+      "accuracy_within_threshold": 1.0,
+      "availability": 1.0,
+      "pos_p50_m": 0.0125200479434787,
+      "pos_p95_m": 0.030504362030308502,
+      "pos_max_m": 0.04999502841148798,
+      "pos_rmse_m": 0.016690977843759554,
+      "heading_p50_deg": 0.18144272729127237,
+      "heading_p95_deg": 0.5072094043380654,
+      "wrong_half_fraction": 0.0,
+      "wrong_half_episodes": 0,
+      "wrong_half_longest_s": 0.0,
+      "confidently_wrong_samples": 0,
+      "side_confidence_mean_when_right": 0.9975273768433655,
+      "side_confidence_mean_when_wrong": null,
+      "latency_p50_ms": 1.1494000000311644,
+      "latency_p95_ms": 14.532999999801177,
+      "alignment_offset_max_s": 0.0,
+      "tolerance_s": 0.05,
+      "pos_threshold_m": 0.5,
+      "heading_threshold_deg": 5.0
+    },
+    "events": [
+      {
+        "t": 0.0,
+        "event": "initial",
+        "converge_s": 0.0
+      }
+    ],
+    "checks": {
+      "pos p50 ≤ 0.2 m": true,
+      "pos p95 ≤ 0.5 m": true,
+      "heading p95 ≤ 5.0°": true,
+      "no wrong-half samples": true,
+      "every event converges ≤ 10.0 s": true
+    }
+  },
+  "global_sideline": {
+    "metrics": {
+      "samples": 601,
+      "accuracy_within_threshold": 0.9467554076539102,
+      "availability": 0.9500831946755408,
+      "pos_p50_m": 0.015558897476360108,
+      "pos_p95_m": 0.19918012433342946,
+      "pos_max_m": 6.0669703740802605,
+      "pos_rmse_m": 0.3658336427845521,
+      "heading_p50_deg": 0.21987200819973896,
+      "heading_p95_deg": 2.093219026736846,
+      "wrong_half_fraction": 0.0,
+      "wrong_half_episodes": 0,
+      "wrong_half_longest_s": 0.0,
+      "confidently_wrong_samples": 0,
+      "side_confidence_mean_when_right": 0.9939833206965273,
+      "side_confidence_mean_when_wrong": null,
+      "latency_p50_ms": 8.35929999993823,
+      "latency_p95_ms": 13.758850000044731,
+      "alignment_offset_max_s": 0.0,
+      "tolerance_s": 0.05,
+      "pos_threshold_m": 0.5,
+      "heading_threshold_deg": 5.0
+    },
+    "events": [
+      {
+        "t": 0.0,
+        "event": "initial",
+        "converge_s": 1.0666666666666667
+      }
+    ],
+    "checks": {
+      "pos p50 ≤ 0.2 m": true,
+      "pos p95 ≤ 0.5 m": true,
+      "heading p95 ≤ 5.0°": true,
+      "no wrong-half samples": true,
+      "every event converges ≤ 10.0 s": true
+    }
+  },
+  "penalty_reentry": {
+    "metrics": {
+      "samples": 541,
+      "accuracy_within_threshold": 1.0,
+      "availability": 1.0,
+      "pos_p50_m": 0.017950801265434718,
+      "pos_p95_m": 0.03782138428862026,
+      "pos_max_m": 0.10087377766229438,
+      "pos_rmse_m": 0.022442225112381056,
+      "heading_p50_deg": 0.18503698257811457,
+      "heading_p95_deg": 0.4980130454521366,
+      "wrong_half_fraction": 0.0,
+      "wrong_half_episodes": 0,
+      "wrong_half_longest_s": 0.0,
+      "confidently_wrong_samples": 0,
+      "side_confidence_mean_when_right": 0.9975273768433652,
+      "side_confidence_mean_when_wrong": null,
+      "latency_p50_ms": 1.0179000000789529,
+      "latency_p95_ms": 13.311100000009901,
+      "alignment_offset_max_s": 0.0,
+      "tolerance_s": 0.05,
+      "pos_threshold_m": 0.5,
+      "heading_threshold_deg": 5.0
+    },
+    "events": [
+      {
+        "t": 0.0,
+        "event": "initial",
+        "converge_s": 0.0
+      }
+    ],
+    "checks": {
+      "pos p50 ≤ 0.2 m": true,
+      "pos p95 ≤ 0.5 m": true,
+      "heading p95 ≤ 5.0°": true,
+      "no wrong-half samples": true,
+      "every event converges ≤ 10.0 s": true
+    }
+  },
+  "falls": {
+    "metrics": {
+      "samples": 1203,
+      "accuracy_within_threshold": 0.999168744804655,
+      "availability": 1.0,
+      "pos_p50_m": 0.016045994969042805,
+      "pos_p95_m": 0.07964206970151472,
+      "pos_max_m": 0.415876834837622,
+      "pos_rmse_m": 0.07558106639850022,
+      "heading_p50_deg": 0.192038475826851,
+      "heading_p95_deg": 0.9131739758876737,
+      "wrong_half_fraction": 0.0,
+      "wrong_half_episodes": 0,
+      "wrong_half_longest_s": 0.0,
+      "confidently_wrong_samples": 0,
+      "side_confidence_mean_when_right": 0.9972109123151606,
+      "side_confidence_mean_when_wrong": null,
+      "latency_p50_ms": 7.711100000051374,
+      "latency_p95_ms": 13.763900000026288,
+      "alignment_offset_max_s": 0.0,
+      "tolerance_s": 0.05,
+      "pos_threshold_m": 0.5,
+      "heading_threshold_deg": 5.0
+    },
+    "events": [
+      {
+        "t": 0.0,
+        "event": "initial",
+        "converge_s": 0.0
+      },
+      {
+        "t": 15.03333333333329,
+        "event": "fall",
+        "converge_s": 1.3666666666666831
+      },
+      {
+        "t": 30.06666666666732,
+        "event": "fall",
+        "converge_s": 0.0
+      }
+    ],
+    "checks": {
+      "pos p50 ≤ 0.2 m": true,
+      "pos p95 ≤ 0.5 m": true,
+      "heading p95 ≤ 5.0°": true,
+      "no wrong-half samples": true,
+      "every event converges ≤ 10.0 s": true
+    }
+  },
+  "kidnap_same_half": {
+    "metrics": {
+      "samples": 752,
+      "accuracy_within_threshold": 0.9162234042553191,
+      "availability": 1.0,
+      "pos_p50_m": 0.0196009433587868,
+      "pos_p95_m": 1.3766043736345388,
+      "pos_max_m": 1.5053278835542891,
+      "pos_rmse_m": 0.4042727876524048,
+      "heading_p50_deg": 0.20219488440286373,
+      "heading_p95_deg": 34.984907676694746,
+      "wrong_half_fraction": 0.0,
+      "wrong_half_episodes": 0,
+      "wrong_half_longest_s": 0.0,
+      "confidently_wrong_samples": 0,
+      "side_confidence_mean_when_right": 0.997148061520482,
+      "side_confidence_mean_when_wrong": null,
+      "latency_p50_ms": 1.029000000016822,
+      "latency_p95_ms": 14.225429999885364,
+      "alignment_offset_max_s": 0.0,
+      "tolerance_s": 0.05,
+      "pos_threshold_m": 0.5,
+      "heading_threshold_deg": 5.0
+    },
+    "events": [
+      {
+        "t": 0.0,
+        "event": "initial",
+        "converge_s": 0.0
+      },
+      {
+        "t": 10.033333333333308,
+        "event": "kidnap",
+        "converge_s": 2.0999999999999925
+      }
+    ],
+    "checks": {
+      "pos p50 ≤ 0.2 m": true,
+      "pos p95 ≤ 0.5 m": false,
+      "heading p95 ≤ 5.0°": false,
+      "no wrong-half samples": true,
+      "every event converges ≤ 10.0 s": true
+    }
+  },
+  "kidnap_cross_team": {
+    "metrics": {
+      "samples": 902,
+      "accuracy_within_threshold": 0.9124168514412417,
+      "availability": 1.0,
+      "pos_p50_m": 0.018095394860626533,
+      "pos_p95_m": 6.748208579416349,
+      "pos_max_m": 7.451400138712964,
+      "pos_rmse_m": 1.7224046424120718,
+      "heading_p50_deg": 0.17980550960969507,
+      "heading_p95_deg": 167.8732804645371,
+      "wrong_half_fraction": 0.0565410199556541,
+      "wrong_half_episodes": 1,
+      "wrong_half_longest_s": 1.6666666666666607,
+      "confidently_wrong_samples": 8,
+      "side_confidence_mean_when_right": 0.9974349728780235,
+      "side_confidence_mean_when_wrong": 0.25186204252154554,
+      "latency_p50_ms": 1.794000000018059,
+      "latency_p95_ms": 15.922454999986257,
+      "alignment_offset_max_s": 0.0,
+      "tolerance_s": 0.05,
+      "pos_threshold_m": 0.5,
+      "heading_threshold_deg": 5.0
+    },
+    "events": [
+      {
+        "t": 0.0,
+        "event": "initial",
+        "converge_s": 0.0
+      },
+      {
+        "t": 10.033333333333308,
+        "event": "kidnap",
+        "converge_s": 2.6999999999999904
+      }
+    ],
+    "checks": {
+      "pos p50 ≤ 0.2 m": true,
+      "pos p95 ≤ 0.5 m": false,
+      "heading p95 ≤ 5.0°": false,
+      "no wrong-half samples": false,
+      "every event converges ≤ 10.0 s": true
+    }
+  },
+  "kidnap_cross_alone": {
+    "metrics": {
+      "samples": 902,
+      "accuracy_within_threshold": 0.33370288248337027,
+      "availability": 1.0,
+      "pos_p50_m": 2.7870534597400036,
+      "pos_p95_m": 8.228309037162209,
+      "pos_max_m": 8.311507659316455,
+      "pos_rmse_m": 4.724298481817526,
+      "heading_p50_deg": 178.24946654097567,
+      "heading_p95_deg": 179.9733632004698,
+      "wrong_half_fraction": 0.6662971175166297,
+      "wrong_half_episodes": 1,
+      "wrong_half_longest_s": 20.000000000000675,
+      "confidently_wrong_samples": 601,
+      "side_confidence_mean_when_right": 0.9975273768433652,
+      "side_confidence_mean_when_wrong": 0.9941446885379442,
+      "latency_p50_ms": 1.3595999998869956,
+      "latency_p95_ms": 14.030939999963719,
+      "alignment_offset_max_s": 0.0,
+      "tolerance_s": 0.05,
+      "pos_threshold_m": 0.5,
+      "heading_threshold_deg": 5.0
+    },
+    "events": [
+      {
+        "t": 0.0,
+        "event": "initial",
+        "converge_s": 0.0
+      },
+      {
+        "t": 10.033333333333308,
+        "event": "kidnap",
+        "converge_s": null
+      }
+    ],
+    "checks": {
+      "pos p50 ≤ 0.2 m": false,
+      "pos p95 ≤ 0.5 m": false,
+      "heading p95 ≤ 5.0°": false,
+      "no wrong-half samples": false,
+      "every event converges ≤ 10.0 s": false
+    }
+  },
+  "team_kidnap_cross_kidnapped_p3": {
+    "metrics": {
+      "samples": 901,
+      "accuracy_within_threshold": 0.6881243063263041,
+      "availability": 1.0,
+      "pos_p50_m": 0.020293311713066503,
+      "pos_p95_m": 6.35205221512565,
+      "pos_max_m": 7.200246462854084,
+      "pos_rmse_m": 2.917826137422888,
+      "heading_p50_deg": 0.24503647046981114,
+      "heading_p95_deg": 179.94018866701842,
+      "wrong_half_fraction": 0.3118756936736959,
+      "wrong_half_episodes": 1,
+      "wrong_half_longest_s": 9.33333333333348,
+      "confidently_wrong_samples": 250,
+      "side_confidence_mean_when_right": 0.9983991809178917,
+      "side_confidence_mean_when_wrong": 0.8872116206319256,
+      "latency_p50_ms": null,
+      "latency_p95_ms": null,
+      "alignment_offset_max_s": 0.0,
+      "tolerance_s": 0.05,
+      "pos_threshold_m": 0.5,
+      "heading_threshold_deg": 5.0
+    },
+    "events": [
+      {
+        "t": 0.0,
+        "event": "initial",
+        "converge_s": 0.0
+      },
+      {
+        "t": 10.033333333333308,
+        "event": "kidnap",
+        "converge_s": 9.366666666666815
+      }
+    ],
+    "checks": {
+      "pos p50 ≤ 0.2 m": true,
+      "pos p95 ≤ 0.5 m": false,
+      "heading p95 ≤ 5.0°": false,
+      "no wrong-half samples": false,
+      "every event converges ≤ 10.0 s": true
+    }
+  },
+  "team_kidnap_cross_teammate_p2": {
+    "metrics": {
+      "samples": 901,
+      "accuracy_within_threshold": 1.0,
+      "availability": 1.0,
+      "pos_p50_m": 0.013492900942140604,
+      "pos_p95_m": 0.03581444895665377,
+      "pos_max_m": 0.09211072358228911,
+      "pos_rmse_m": 0.019260317233259373,
+      "heading_p50_deg": 0.17006942360915484,
+      "heading_p95_deg": 0.5331419800207214,
+      "wrong_half_fraction": 0.0,
+      "wrong_half_episodes": 0,
+      "wrong_half_longest_s": 0.0,
+      "confidently_wrong_samples": 0,
+      "side_confidence_mean_when_right": 0.9996575335331532,
+      "side_confidence_mean_when_wrong": null,
+      "latency_p50_ms": null,
+      "latency_p95_ms": null,
+      "alignment_offset_max_s": 0.0,
+      "tolerance_s": 0.05,
+      "pos_threshold_m": 0.5,
+      "heading_threshold_deg": 5.0
+    },
+    "events": [
+      {
+        "t": 0.0,
+        "event": "initial",
+        "converge_s": 0.0
+      }
+    ],
+    "checks": {
+      "pos p50 ≤ 0.2 m": true,
+      "pos p95 ≤ 0.5 m": true,
+      "heading p95 ≤ 5.0°": true,
+      "no wrong-half samples": true,
+      "every event converges ≤ 10.0 s": true
+    }
+  }
+}

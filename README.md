@@ -16,6 +16,7 @@ Before touching anything under `third-party/`, read [docs/protomotions.md](docs/
 | `robocup_rl/`             | Our package: robot configs and one directory per experiment, each holding its own `results/`. Installed editable by `uv sync`; registers robots with ProtoMotions via entry points. |
 | `tests/`                  | `pytest` smoke tests (needs the `dev` extra).                                                     |
 | `third-party/`            | Vendored ProtoMotions and IsaacLab subtrees. Owner approval needed for edits.                      |
+| `localization/`           | Field localization (particle filter, side belief, GameController and team comms, bench harness). Pure Python + numpy with its own venv and tests; independent of ProtoMotions. See `localization/README.md`. |
 
 ## Usage
 

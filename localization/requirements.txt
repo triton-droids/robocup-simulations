@@ -1,0 +1,8 @@
+# Runtime: numpy only. Tested with numpy 1.21.5 on Python 3.10 (Ubuntu 22.04 / ROS Humble).
+numpy>=1.21.5,<2
+# Tests and lint
+pytest>=7
+ruff>=0.5
+# Optional:
+#   Pillow        - td_bench FolderFrames reading .png/.jpg (.npy works without it)
+#   pyrealsense2  - td_bench RealSenseFrames (a D435 on the bench; untested so far)

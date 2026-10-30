@@ -1,0 +1,135 @@
+// Proposed localization pipeline: vision, odometry and sensor fusion.
+// Source of docs/figures/localization_pipeline.svg. See docs/roadmap.md §3.5.
+// Render: dot -Tsvg localization_pipeline.dot -o localization_pipeline.svg
+digraph localization_pipeline {
+  graph [rankdir=LR, splines=spline, nodesep=0.3, ranksep=0.9, pad=0.4,
+         fontname="Helvetica", fontsize=13, bgcolor="white",
+         label=<<b>Proposed localization pipeline — Triton Droids (Sparky, HSL Large)</b><br/><font point-size="11">Proposal, 2026-10-26. Dashed = planned or optional. Topics and rates are proposals except where they exist today.</font>>,
+         labelloc=t, labeljust=l];
+  node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, penwidth=1.2, margin="0.12,0.06"];
+  edge  [fontname="Helvetica", fontsize=8.5, color="#4b5563", arrowsize=0.7];
+
+  // ---------------------------------------------------------------- sensors
+  subgraph cluster_sensors {
+    label=<<b>Sensors and external inputs</b>>; style="rounded,filled"; fillcolor="#f3f4f6"; color="#9ca3af";
+    node [fillcolor="#ffffff", color="#6b7280"];
+    rgb      [label=<<b>D435 RGB</b><br/>rolling shutter, 69°×42°<br/>848×480 @ 60 (USB 3)>];
+    ir       [label=<<b>D435 IR stereo pair</b><br/>passive, projector OFF<br/>global shutter, 50 mm baseline>];
+    asic     [label=<<b>D435 depth ASIC</b><br/>on-camera stereo depth<br/>(no Jetson cost)>];
+    head_imu [label=<<b>Head IMU</b>&#160;(ESP32-S3)<br/>accel + gyro, 100 Hz<br/>/head/imu>];
+    head_enc [label=<<b>Head pan/tilt encoders</b><br/>planned<br/>(servos have no feedback today)>, style="rounded,filled,dashed"];
+    body_imu [label=<<b>Body IMU</b>&#160;BNO085<br/>game rotation vector (no compass)<br/>100 Hz, /imu/data_raw>];
+    leg_enc  [label=<<b>Leg joint encoders</b><br/>RobStride over CAN<br/>/joint_states (needs calibration)>];
+    walk_cmd [label=<<b>Walk command</b><br/>RL walking policy<br/>commanded velocity>];
+    ir -> asic [label="raw pairs"];
+  }
+
+  subgraph cluster_external {
+    label=<<b>Game and team (UDP)</b>>; style="rounded,filled"; fillcolor="#fef9c3"; color="#ca8a04";
+    node [fillcolor="#ffffff", color="#ca8a04"];
+    gc    [label=<<b>GameController</b><br/>2 packets/s: state, half,<br/>kick-off team, penalties>];
+    mates [label=<<b>Teammates</b><br/>broadcast ≤512 B, ~2 msg/s/robot<br/>(12,000 msgs per game per team)>];
+  }
+
+  // ---------------------------------------------------------------- layer 1
+  subgraph cluster_l1 {
+    label=<<b>Layer 1 — Head and camera pose</b>&#160; (100–200 Hz)>; style="rounded,filled"; fillcolor="#f3e8ff"; color="#9333ea";
+    node [fillcolor="#ffffff", color="#9333ea"];
+    head_filter [label=<<b>Head joint filter</b>&#160;(per axis)<br/>encoder = absolute, slow<br/>head gyro − body gyro = fast<br/>→ neck_yaw, neck_pitch in /joint_states>];
+    rsp         [label=<<b>robot_state_publisher</b><br/>leg chain + neck joints<br/>TF base_footprint → camera_link>];
+    plane       [label=<<b>Floor plane fit</b><br/>RANSAC on depth 1–4 m<br/>→ camera height, pitch, roll>];
+    attitude_chk[label=<<b>Consistency check</b><br/>body IMU + chain + encoders<br/>vs head-IMU gravity vs floor plane<br/>→ offset alarm / recalibration log>];
+    head_filter -> rsp;
+    rsp -> attitude_chk [style=dashed];
+    plane -> attitude_chk [style=dashed];
+  }
+
+  // ---------------------------------------------------------------- layer 2
+  subgraph cluster_l2 {
+    label=<<b>Layer 2 — Odometry</b>&#160; (100 Hz, continuous, never jumps)>; style="rounded,filled"; fillcolor="#dbeafe"; color="#2563eb";
+    node [fillcolor="#ffffff", color="#2563eb"];
+    leg_odom [label=<<b>Leg odometry</b><br/>support-foot displacement<br/>+ foot-contact detection>];
+    vo       [label=<<b>cuVSLAM stereo-inertial VO</b>&#160;(L2b, optional)<br/>Isaac ROS 3.2, IR pair + head IMU<br/>head motion subtracted → body velocity<br/>gated on pan rate / feature count>, style="rounded,filled,dashed"];
+    anomaly  [label=<<b>Fall / slip detector</b><br/>fall_detector.py, leg-vs-gyro mismatch<br/>→ inflate covariance, pause vision>];
+    ekf      [label=<<b>EKF</b>&#160;(robot_localization)<br/>heading from gyro, distance from legs<br/>VO + walk command as weak inputs>, fillcolor="#bfdbfe"];
+    leg_odom -> ekf [label="Δx, Δy"];
+    vo -> ekf [label="velocity + cov", style=dashed];
+    anomaly -> ekf [label="inflate cov", color="#dc2626", fontcolor="#dc2626"];
+  }
+
+  // ---------------------------------------------------------------- vision front end
+  subgraph cluster_vision {
+    label=<<b>Vision front end</b>&#160; (camera rate, Jetson GPU via TensorRT)>; style="rounded,filled"; fillcolor="#dcfce7"; color="#16a34a";
+    node [fillcolor="#ffffff", color="#16a34a"];
+    seg      [label=<<b>Field + line segmentation</b><br/>YOEO seg head or small U-Net>];
+    det      [label=<<b>Object detection</b><br/>ball, goalposts, robots<br/>(shared with ball pipeline)>];
+    mask     [label=<<b>Depth mask</b><br/>drop pixels above the floor plane<br/>(robots, people, jerseys)>];
+    features [label=<<b>Feature extraction</b><br/>line points, L/T/X crossings,<br/>center circle, penalty marks, goalpost bases>];
+    project  [label=<<b>Ground projection</b>&#160;(P-31)<br/>TF looked up at the image stamp<br/>range sigma grows with d² — bearings only beyond 4 m>, fillcolor="#bbf7d0"];
+    seg -> mask -> features;
+    det -> features [label="goalposts"];
+    features -> project;
+  }
+
+  // ---------------------------------------------------------------- layer 3
+  subgraph cluster_l3 {
+    label=<<b>Layer 3 — Field localization</b>&#160; (15–30 Hz)>; style="rounded,filled"; fillcolor="#ffedd5"; color="#ea580c";
+    node [fillcolor="#ffffff", color="#ea580c"];
+    fieldmap [label=<<b>Field map</b><br/>HSL 2026 field JSON (M or L)<br/>lines, arcs, crossings, posts<br/>+ distance-transform likelihood field>];
+    pf       [label=<<b>Particle filter</b>&#160;(half-symmetric pose)<br/>predict: odom Δ at image stamp<br/>update: line likelihood, feature match, post bearing<br/>resample + random particles within current half>, fillcolor="#fed7aa"];
+    side     [label=<<b>Side belief</b>&#160;(own half vs mirrored)<br/>known poses: Initial, penalty re-entry<br/>continuity: gyro heading, &lt;1 m since last fix<br/>team: mirrored-ball check, goalkeeper anchor<br/>weak: opponents at kick-off, venue features>, fillcolor="#fed7aa"];
+    events   [label=<<b>Game events</b><br/>Initial → seed starting spots<br/>penalty end → 2 touchline hypotheses<br/>fall → local re-fix only>];
+    fieldmap -> pf;
+    events -> pf [label="reseed"];
+    events -> side;
+    pf -> side [label="pose clusters", dir=both];
+  }
+
+  // ---------------------------------------------------------------- outputs
+  subgraph cluster_out {
+    label=<<b>Outputs and consumers</b>>; style="rounded,filled"; fillcolor="#e5e7eb"; color="#374151";
+    node [fillcolor="#ffffff", color="#374151"];
+    tf_odom  [label=<<b>TF odom → base_footprint</b><br/>/odometry/filtered, 100 Hz>];
+    tf_map   [label=<<b>TF map → odom</b><br/>/localization/pose (PoseWithCovarianceStamped)<br/>LocalizationState: status, side confidence>, penwidth=2];
+    ball     [label=<<b>Ball tracker</b>&#160;(P-33)<br/>BallState in base_footprint / odom<br/>→ ball in map>];
+    behavior [label=<<b>Behavior</b><br/>Ready-state positioning (45 s)<br/>no shots while side confidence is low>];
+    teamtx   [label=<<b>Team broadcast</b><br/>pose, ball in map, side confidence<br/>→ Teammates (UDP, budgeted)>];
+  }
+
+  // ---------------------------------------------------------------- cross-cluster edges
+  head_enc -> head_filter [style=dashed, label="angles"];
+  head_imu -> head_filter [label="gyro, gravity"];
+  body_imu -> head_filter [label="body gyro"];
+  leg_enc  -> rsp         [label="/joint_states"];
+  asic     -> plane       [label="depth"];
+  asic     -> mask        [label="aligned depth"];
+  rgb      -> seg         [label="image + stamp"];
+  rgb      -> det;
+  plane    -> project     [label="measured floor\n(when valid)", color="#9333ea", fontcolor="#9333ea"];
+  rsp      -> project     [label="camera TF\n(fallback)", color="#9333ea", fontcolor="#9333ea"];
+
+  leg_enc  -> leg_odom    [label="joint angles"];
+  body_imu -> ekf         [label="gyro yaw rate"];
+  body_imu -> anomaly;
+  leg_enc  -> anomaly;
+  walk_cmd -> ekf         [label="weak prior", style=dashed];
+  ir       -> vo          [style=dashed, label="IR frames"];
+  head_imu -> vo          [style=dashed];
+  head_filter -> vo       [style=dashed, label="head motion"];
+
+  project  -> pf          [label="observations\n(base_footprint)", color="#16a34a", fontcolor="#16a34a", penwidth=1.6];
+  ekf      -> tf_odom     [color="#2563eb", penwidth=1.6];
+  tf_odom  -> pf          [label="odom Δ", color="#2563eb", fontcolor="#2563eb", penwidth=1.6];
+  anomaly  -> events      [label="fall", color="#dc2626", fontcolor="#dc2626"];
+  gc       -> events      [label="state, penalties"];
+  mates    -> side        [label="ball + side reports"];
+
+  pf       -> tf_map      [color="#ea580c", penwidth=1.8];
+  side     -> tf_map      [label="side confidence", color="#ea580c", fontcolor="#ea580c"];
+  det      -> ball        [label="ball detections"];
+  tf_map   -> ball;
+  tf_map   -> behavior;
+  ball     -> behavior;
+  tf_map   -> teamtx;
+  ball     -> teamtx;
+}

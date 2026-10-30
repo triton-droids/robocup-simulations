@@ -1,0 +1,43 @@
+// Simple overview of the proposed localization pipeline.
+// Companion to localization_pipeline.dot (detailed). See docs/roadmap.md §3.5.
+// Render: dot -Tsvg localization_pipeline_simple.dot -o localization_pipeline_simple.svg
+digraph localization_pipeline_simple {
+  graph [rankdir=LR, splines=spline, nodesep=0.45, ranksep=0.8, pad=0.4,
+         fontname="Helvetica", fontsize=14, bgcolor="white",
+         label=<<b>Localization pipeline — overview</b><br/><font point-size="11">Simple version. Detailed chart: localization_pipeline.png</font>>,
+         labelloc=t, labeljust=l];
+  node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=12, penwidth=1.4, margin="0.18,0.1"];
+  edge  [fontname="Helvetica", fontsize=10, color="#4b5563", penwidth=1.4, arrowsize=0.8];
+
+  // Sensors
+  camera  [label=<<b>Head camera</b><br/>D435 RGB + passive depth>, fillcolor="#f3f4f6", color="#6b7280"];
+  imus    [label=<<b>IMUs</b><br/>head + body>, fillcolor="#f3f4f6", color="#6b7280"];
+  joints  [label=<<b>Joint encoders</b><br/>legs + head>, fillcolor="#f3f4f6", color="#6b7280"];
+  game    [label=<<b>GameController</b><br/>+ teammates>, fillcolor="#fef9c3", color="#ca8a04"];
+
+  // Processing
+  headpose [label=<<b>1. Camera pose</b><br/>where the camera points>, fillcolor="#f3e8ff", color="#9333ea"];
+  odom     [label=<<b>2. Odometry</b><br/>how far the robot moved>, fillcolor="#dbeafe", color="#2563eb"];
+  vision   [label=<<b>Vision</b><br/>field lines + goalposts<br/>on the floor>, fillcolor="#dcfce7", color="#16a34a"];
+  pf       [label=<<b>3. Particle filter</b><br/>match what is seen<br/>to the field map>, fillcolor="#ffedd5", color="#ea580c"];
+  side     [label=<<b>Which half?</b><br/>known poses, continuity,<br/>teammates>, fillcolor="#ffedd5", color="#ea580c"];
+
+  // Output
+  pose     [label=<<b>Robot pose on the field</b><br/>+ confidence>, fillcolor="#e5e7eb", color="#374151", penwidth=2.2];
+  behavior [label=<<b>Behavior + team</b>>, fillcolor="#e5e7eb", color="#374151"];
+
+  camera -> vision;
+  camera -> headpose [label="depth"];
+  imus   -> headpose;
+  joints -> headpose;
+  imus   -> odom;
+  joints -> odom;
+  headpose -> vision [label="camera angle"];
+  vision -> pf       [label="observations", color="#16a34a"];
+  odom   -> pf       [label="motion", color="#2563eb"];
+  game   -> side;
+  pf     -> side     [dir=both];
+  pf     -> pose     [color="#ea580c", penwidth=2];
+  side   -> pose     [color="#ea580c"];
+  pose   -> behavior;
+}
