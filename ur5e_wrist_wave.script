@@ -1,0 +1,50 @@
+# UR5e wrist wave | PolyScope 5 | Standalone Script File node
+# One controller at a time. Run in URSim before testing in the real cell.
+# Jog to a verified clear pose, then enter that arm's six joint angles in degrees.
+# Base, Shoulder, Elbow, Wrist 1, Wrist 2, Wrist 3 (use the actual angle, no wrapping).
+# Enable only after checking the full wrist/tool/cable sweep and cell safeguards.
+def ur5e_wrist_wave():
+  local wave_enabled = False
+  local ready_deg = [0, 0, 0, 0, 0, 0]
+
+  if not wave_enabled:
+    textmsg("Wrist wave disabled. Teach and verify the start pose first.")
+    halt
+  end
+
+  if not is_steady():
+    textmsg("Wrist wave blocked. Start from a standstill.")
+    halt
+  end
+
+  local center = get_actual_joint_positions()
+  local joint = 0
+  while joint < 6:
+    if abs(center[joint] - d2r(ready_deg[joint])) > d2r(1.0):
+      textmsg("Wrist wave blocked. Jog to the verified start pose.")
+      halt
+    end
+    joint = joint + 1
+  end
+
+  local offset = d2r(5.0)
+  local right = [center[0], center[1], center[2], center[3], center[4], center[5] + offset]
+  local left = [center[0], center[1], center[2], center[3], center[4], center[5] - offset]
+
+  # Checks the three joint targets against active limits.
+  # Verify clearance over the full sweep separately, including the start tolerance.
+  if not (is_within_safety_limits(center) and is_within_safety_limits(right) and is_within_safety_limits(left)):
+    textmsg("Wrist wave blocked. A target failed the controller limit check.")
+    halt
+  end
+
+  local accel = 0.25 # rad/s^2
+  local speed = 0.10 # rad/s
+  movej(right, a=accel, v=speed, t=0, r=0)
+  movej(left, a=accel, v=speed, t=0, r=0)
+  movej(right, a=accel, v=speed, t=0, r=0)
+  movej(left, a=accel, v=speed, t=0, r=0)
+  movej(center, a=accel, v=speed, t=0, r=0)
+  halt
+end
+ur5e_wrist_wave()
