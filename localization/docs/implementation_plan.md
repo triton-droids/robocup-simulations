@@ -487,13 +487,13 @@ Agents: update the row when you start, open a PR, or finish. Put the real `P-XX`
 | LOC-16 | Floor-plane fit | 🤖/🔧 | 13 | not started | | |
 | LOC-17 | Field feature detection | 🔧/🤖 | 14, 16 | not started | | |
 | LOC-18 | Feature projection | 🤖 | 03 | not started | | |
-| LOC-19 | cuVSLAM VO evaluation | 🔧 | 09, 11, 13 | not started on hardware. Bench prep done locally: a cuVSLAM model (`SimVisualOdometry`), a `LiveVisualOdometry.push_pose()` input for real cuVSLAM output, and a visual-only test (`results/visual_only.html`). Finding: head scans faster than the 1.2 rad/s tracking gate drop VO about 20% of the time | | `localization/td_bench` |
+| LOC-19 | cuVSLAM VO evaluation | 🔧 | 09, 11, 13 | not started on hardware. Bench prep done locally: a cuVSLAM model (`SimVisualOdometry`), a `LiveVisualOdometry.push_pose()` input for real cuVSLAM output, and a visual-only test (`test_report/visual_only.html`). Finding: head scans faster than the 1.2 rad/s tracking gate drop VO about 20% of the time | | `localization/td_bench` |
 | LOC-20 | Localization node + launch | 🤖/🔧 | 02, 05, 06, 08, 11, 17, 18 | not started | | |
 | LOC-21 | Team communication | 🤖/🔧 | 08, 06 | **code + tests done locally** (TeamComm, multi-robot sim, consensus rule); field test 🔧 still open; on the `localization` branch of robocup-simulations | | `td_game/team_comm.py`, `td_localization/team_sim.py` |
 | LOC-22 | On-robot validation | 🔧 | 20, 09, 11 | not started | | |
 | LOC-23 | Behavior integration | 🧑/🤖 | 20 | not started | | |
 | LOC-24 | Shared geometry module | 🧑/🤖 | ball v1 done | not started | | |
-| LOC-25 | Bench harness (partial hardware) | 🤖/🔧 | 05, 06, 08, 21 | **code + tests done locally** (31 tests): each input (camera, odometry, head, GameController, teammates, ball) can be real, recorded or simulated; record/replay; CLI; visual-only mix (cuVSLAM model + encoder/IMU head model); results report in `localization_work/results/`. Its line-pixel detector is a bench stand-in, not LOC-17. RealSense path untested (no D435 here); on the `localization` branch of robocup-simulations | | `localization/td_bench` |
+| LOC-25 | Bench harness (partial hardware) | 🤖/🔧 | 05, 06, 08, 21 | **code + tests done locally** (31 tests): each input (camera, odometry, head, GameController, teammates, ball) can be real, recorded or simulated; record/replay; CLI; visual-only mix (cuVSLAM model + encoder/IMU head model); results report in `localization/test_report/`. Its line-pixel detector is a bench stand-in, not LOC-17. RealSense path untested (no D435 here); on the `localization` branch of robocup-simulations | | `localization/td_bench` |
 
 (LOC-12 is intentionally unused: the old odometry-model item is folded into LOC-15.)
 

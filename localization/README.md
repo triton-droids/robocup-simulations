@@ -9,6 +9,23 @@ GameController or the field network yet. The packages are pure Python (numpy onl
 `td_perception` package layout (ament_python), so they can move there once the team decides where localization
 lives. This folder is independent of the ProtoMotions training code in the rest of this repo.
 
+## Getting started
+
+New here? Start with the **[getting-started series](docs/getting_started/README.md)**. It introduces the project,
+explains how to contribute, and says where things stand. There are two tracks:
+
+- **[For humans](docs/getting_started/humans/01_welcome.md):** in depth, assuming no prior robotics or probability
+  background. Twelve chapters build up the geometry and probability step by step, walk through every part of
+  the code with worked examples and runnable exercises, then cover testing, current progress and how to
+  contribute.
+- **[For agents](docs/getting_started/agents/README.md):** concise. Layout, commands, invariants, APIs and data
+  contracts, status, workflow and gotchas.
+
+| | Humans | Agents |
+|---|---|---|
+| How to contribute | [Chapter 12](docs/getting_started/humans/12_contributing.md) | [04_contributing.md](docs/getting_started/agents/04_contributing.md) |
+| Current progress | [Chapter 11](docs/getting_started/humans/11_progress.md) | [03_status.md](docs/getting_started/agents/03_status.md) |
+
 ## Why it's hard, and the approach
 
 The HSL field is symmetric: from the lines alone, a robot can't tell its own half from the opponent's. Compasses
@@ -134,9 +151,10 @@ python -m td_localization.eval evaluate --gt gt.csv --est a.csv --est b.csv --ou
 
 ## For agents and contributors
 
-- Start with [docs/README.md](docs/README.md). Pick a ticket from the plan
-  ([docs/implementation_plan.md](docs/implementation_plan.md)), check its dependencies, follow §0 and §7, and
-  update the §6 status table.
+- Humans: [how to contribute](docs/getting_started/humans/12_contributing.md). Agents: the
+  [agent track](docs/getting_started/agents/README.md), starting with its hard rules.
+- Pick a ticket from the plan ([docs/implementation_plan.md](docs/implementation_plan.md)), check its
+  dependencies, follow §0 and §7, and update the §6 status table.
 - **Stop and ask a human** before:
   - changing a team decision (§9);
   - touching message definitions;

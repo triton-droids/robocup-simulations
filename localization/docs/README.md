@@ -2,6 +2,7 @@
 
 | Doc | Read it for |
 |---|---|
+| [getting_started/](getting_started/README.md) | **Start here if you're new.** A series in two tracks: [humans](getting_started/humans/01_welcome.md) (in depth: the problem, the math, a tour of the code, testing, progress, contributing) and [agents](getting_started/agents/README.md) (concise: layout, invariants, APIs, status, workflow). |
 | [roadmap.md](roadmap.md) | What existed when this started (no localization anywhere in the team repos), the hardware, the HSL 2026 rules that constrain localization (§2), the design (§3.5 fusion and side handling, §3.6 the cuVSLAM assessment) and the phased plan (§4). **Read it first.** |
 | [implementation_plan.md](implementation_plan.md) | Tickets LOC-01 to LOC-25, with dependencies, labels and done criteria; rules for agents (§0); the status tracker (§6); the team decision log (§9). |
 | [figures/](figures/) | Pipeline diagrams: detailed and simple localization pipelines, and the implementation pipeline. Each `.svg` is rendered from the `.dot` beside it (`dot -Tsvg x.dot -o x.svg`). |
