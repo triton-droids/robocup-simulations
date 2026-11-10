@@ -16,7 +16,34 @@ Before touching anything under `third-party/`, read [docs/protomotions.md](docs/
 | `robocup_rl/`             | Our package: robot configs and one directory per experiment, each holding its own `results/`. Installed editable by `uv sync`; registers robots with ProtoMotions via entry points. |
 | `tests/`                  | `pytest` smoke tests (needs the `dev` extra).                                                     |
 | `third-party/`            | Vendored ProtoMotions and IsaacLab subtrees. Owner approval needed for edits.                      |
-| `localization/`           | Field localization (particle filter, side belief, GameController and team comms, bench harness). Pure Python + numpy with its own venv and tests; independent of ProtoMotions. See `localization/README.md`. |
+| `localization/`           | Field localization (particle filter, side belief, GameController and team comms, bench harness). Pure Python + numpy with its own venv and tests; independent of ProtoMotions. See [Localization](#localization) below. |
+
+## Localization
+
+`localization/` is the team's field localization: where the robot is on the field and which half it's on. It has
+its own venv, tests and docs, and doesn't use ProtoMotions or the environments below. Status: tested in
+simulation and over loopback networking only; nothing has run on the robot yet.
+
+| Doc | For |
+| --- | --- |
+| [localization/README.md](localization/README.md) | Overview, layout, setup, test results, bench usage |
+| [Getting started](localization/docs/getting_started/README.md) | The documentation series, in two tracks |
+| [Getting started for humans](localization/docs/getting_started/humans/01_welcome.md) | 12 in-depth chapters with no robotics background assumed: the problem, the math, a tour of the code, testing |
+| [Getting started for agents](localization/docs/getting_started/agents/README.md) | Concise: hard rules, layout, APIs and contracts, workflow |
+| [How to contribute](localization/docs/getting_started/humans/12_contributing.md) ([agent version](localization/docs/getting_started/agents/04_contributing.md)) | Picking a task, branches and pull requests (into `localization`), conventions, when to ask |
+| [Current progress](localization/docs/getting_started/humans/11_progress.md) ([agent version](localization/docs/getting_started/agents/03_status.md)) | What's done, measured results, known limits, what's next |
+
+Quick start (Python 3.10+):
+
+```sh
+cd localization
+python3 -m venv .venv-localization
+source .venv-localization/bin/activate
+pip install -r requirements.txt
+python run_tests.py                      # all localization tests + ruff, about 5 minutes
+```
+
+The root `pytest` and CI don't run these tests; use `run_tests.py`.
 
 ## Usage
 
